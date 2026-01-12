@@ -1,0 +1,16 @@
+spring:
+  profiles:
+    active: jd
+
+user:
+  platform:
+    web:
+      swagger-bypass: false
+
+sa-token:
+  token-name: satoken
+  token-prefix: Bearer
+  timeout: 7200
+  is-read-cookie: false
+  is-read-body: false
+  is-read-header: true
