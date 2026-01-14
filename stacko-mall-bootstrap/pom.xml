@@ -39,6 +39,14 @@
                 <configuration>
                     <mainClass>com.stacko.mall.bootstrap.StackoMallApplication</mainClass>
                 </configuration>
+                <version>${spring-boot.version}</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

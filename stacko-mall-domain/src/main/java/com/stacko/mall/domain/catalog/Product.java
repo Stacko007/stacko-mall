@@ -40,6 +40,17 @@ public class Product {
         return new Product(ProductId.newId(), tenantId, name, description, price, ProductStatus.DRAFT, now, now);
     }
 
+    public static Product restore(ProductId id,
+                                  String tenantId,
+                                  String name,
+                                  String description,
+                                  BigDecimal price,
+                                  ProductStatus status,
+                                  Instant createdAt,
+                                  Instant updatedAt) {
+        return new Product(id, tenantId, name, description, price, status, createdAt, updatedAt);
+    }
+
     public void update(String name, String description, BigDecimal price, ProductStatus status) {
         this.name = Objects.requireNonNull(name, "name");
         this.description = description;
