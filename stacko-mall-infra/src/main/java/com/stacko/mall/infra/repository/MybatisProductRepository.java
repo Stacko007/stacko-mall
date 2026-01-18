@@ -1,16 +1,18 @@
-package com.stacko.mall.infra.catalog;
+package com.stacko.mall.infra.repository;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.stacko.mall.domain.catalog.Product;
-import com.stacko.mall.domain.catalog.ProductId;
-import com.stacko.mall.domain.catalog.ProductRepository;
-import com.stacko.mall.infra.catalog.persistence.ProductEntity;
-import com.stacko.mall.infra.catalog.persistence.ProductMapper;
+import com.stacko.mall.domain.model.Product;
+import com.stacko.mall.domain.model.ProductId;
+import com.stacko.mall.domain.repository.ProductRepository;
+import com.stacko.mall.infra.po.ProductEntity;
+import com.stacko.mall.infra.dao.ProductMapper;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+@Repository
 public class MybatisProductRepository implements ProductRepository {
     private final ProductMapper productMapper;
 

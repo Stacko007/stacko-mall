@@ -1,8 +1,8 @@
-package com.stacko.mall.infra.catalog;
+package com.stacko.mall.infra;
 
-import com.stacko.mall.domain.catalog.Product;
-import com.stacko.mall.domain.catalog.ProductId;
-import com.stacko.mall.domain.catalog.ProductRepository;
+import com.stacko.mall.domain.model.Product;
+import com.stacko.mall.domain.model.ProductId;
+import com.stacko.mall.domain.repository.ProductRepository;
 
 import java.util.ArrayList;
 import java.util.List;

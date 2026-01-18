@@ -1,4 +1,6 @@
-package com.stacko.mall.domain.catalog;
+package com.stacko.mall.domain.model;
+
+import com.stacko.mall.domain.enums.ProductStatus;
 
 import java.math.BigDecimal;
 import java.time.Instant;

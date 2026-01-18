@@ -1,17 +1,19 @@
-package com.stacko.mall.application.catalog;
+package com.stacko.mall.application.service;
 
-import com.stacko.mall.domain.catalog.Product;
-import com.stacko.mall.domain.catalog.ProductId;
-import com.stacko.mall.domain.catalog.ProductRepository;
+import com.stacko.mall.application.command.CreateProductCommand;
+import com.stacko.mall.application.command.UpdateProductCommand;
+import com.stacko.mall.domain.model.Product;
+import com.stacko.mall.domain.model.ProductId;
+import com.stacko.mall.domain.repository.ProductRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
-public class CatalogApplicationService {
+public class ProductApplicationService {
     private final ProductRepository productRepository;
 
-    public CatalogApplicationService(ProductRepository productRepository) {
+    public ProductApplicationService(ProductRepository productRepository) {
         this.productRepository = productRepository;
     }
 

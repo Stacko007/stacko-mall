@@ -23,9 +23,19 @@
             <version>${stacko-user.version}</version>
         </dependency>
         <dependency>
+            <groupId>com.stacko.user</groupId>
+            <artifactId>stacko-user-interfaces</artifactId>
+            <version>${stacko-user.version}</version>
+        </dependency>
+        <dependency>
             <groupId>com.stacko.mall</groupId>
             <artifactId>stacko-mall-infra</artifactId>
             <version>0.0.1-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>p6spy</groupId>
+            <artifactId>p6spy</artifactId>
+            <version>3.9.1</version>
         </dependency>
 
     </dependencies>

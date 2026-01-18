@@ -1,6 +1,6 @@
-package com.stacko.mall.interfaces.web.catalog;
+package com.stacko.mall.interfaces.web.dto;
 
-import com.stacko.mall.domain.catalog.ProductStatus;
+import com.stacko.mall.domain.enums.ProductStatus;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;

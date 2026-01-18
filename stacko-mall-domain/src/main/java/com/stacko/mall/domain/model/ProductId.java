@@ -1,4 +1,4 @@
-package com.stacko.mall.domain.catalog;
+package com.stacko.mall.domain.model;
 
 import java.util.Objects;
 import java.util.UUID;

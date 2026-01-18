@@ -1,4 +1,7 @@
-package com.stacko.mall.domain.catalog;
+package com.stacko.mall.domain.repository;
+
+import com.stacko.mall.domain.model.Product;
+import com.stacko.mall.domain.model.ProductId;
 
 import java.util.List;
 import java.util.Optional;

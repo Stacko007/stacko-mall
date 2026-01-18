@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS catalog_product (
+CREATE TABLE IF NOT EXISTS mall_product (
     id VARCHAR(64) NOT NULL,
     tenant_id VARCHAR(64) NOT NULL,
     name VARCHAR(128) NOT NULL,

@@ -1,4 +1,4 @@
-package com.stacko.mall.interfaces.web.catalog;
+package com.stacko.mall.application.command;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -6,13 +6,23 @@ import jakarta.validation.constraints.Positive;
 
 import java.math.BigDecimal;
 
-public class ProductCreateRequest {
+public class CreateProductCommand {
+    @NotBlank
+    private String tenantId;
     @NotBlank
     private String name;
     private String description;
     @NotNull
     @Positive
     private BigDecimal price;
+
+    public String getTenantId() {
+        return tenantId;
+    }
+
+    public void setTenantId(String tenantId) {
+        this.tenantId = tenantId;
+    }
 
     public String getName() {
         return name;

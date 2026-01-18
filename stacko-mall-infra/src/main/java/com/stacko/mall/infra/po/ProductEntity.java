@@ -1,17 +1,17 @@
-package com.stacko.mall.infra.catalog.persistence;
+package com.stacko.mall.infra.po;
 
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.stacko.mall.domain.catalog.Product;
-import com.stacko.mall.domain.catalog.ProductId;
-import com.stacko.mall.domain.catalog.ProductStatus;
+import com.stacko.mall.domain.model.Product;
+import com.stacko.mall.domain.model.ProductId;
+import com.stacko.mall.domain.enums.ProductStatus;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 
-@TableName("catalog_product")
+@TableName("mall_product")
 public class ProductEntity {
     @TableId
     private String id;

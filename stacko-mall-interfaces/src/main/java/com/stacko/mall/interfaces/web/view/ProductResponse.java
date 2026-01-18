@@ -1,7 +1,7 @@
-package com.stacko.mall.interfaces.web.catalog;
+package com.stacko.mall.interfaces.web.view;
 
-import com.stacko.mall.domain.catalog.Product;
-import com.stacko.mall.domain.catalog.ProductStatus;
+import com.stacko.mall.domain.model.Product;
+import com.stacko.mall.domain.enums.ProductStatus;
 
 import java.math.BigDecimal;
 import java.time.Instant;
