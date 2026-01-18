@@ -207,6 +207,128 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApiResponseStock"
+  /api/c/orders:
+    post:
+      tags: [mall-c]
+      summary: C端创建订单
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OrderCreateRequest"
+      responses:
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseOrder"
+    get:
+      tags: [mall-c]
+      summary: C端订单列表
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: buyerId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseOrderList"
+  /api/c/orders/{id}:
+    get:
+      tags: [mall-c]
+      summary: C端订单详情
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseOrder"
+  /api/c/orders/{id}/pay:
+    post:
+      tags: [mall-c]
+      summary: C端订单支付
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseOrder"
+  /api/admin/orders:
+    get:
+      tags: [mall-admin]
+      summary: 管理端订单列表
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: buyerId
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseOrderList"
+  /api/admin/orders/{id}:
+    get:
+      tags: [mall-admin]
+      summary: 管理端订单详情
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseOrder"
+  /api/admin/orders/{id}/ship:
+    post:
+      tags: [mall-admin]
+      summary: 管理端订单发货
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OrderShipRequest"
+      responses:
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseOrder"
 components:
   securitySchemes:
     bearerAuth:
@@ -281,6 +403,28 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/StockResponse"
+    ApiResponseOrder:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+          nullable: true
+        data:
+          $ref: "#/components/schemas/OrderResponse"
+    ApiResponseOrderList:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+          nullable: true
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/OrderResponse"
     LoginRequest:
       type: object
       required: [username, password, tenantId]
@@ -382,3 +526,87 @@ components:
         updatedAt:
           type: string
           format: date-time
+    OrderCreateRequest:
+      type: object
+      required: [buyerId, items]
+      properties:
+        buyerId:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/OrderItemRequest"
+    OrderItemRequest:
+      type: object
+      required: [productId, productName, price, quantity]
+      properties:
+        productId:
+          type: string
+        productName:
+          type: string
+        price:
+          type: number
+          format: double
+        quantity:
+          type: integer
+          minimum: 1
+    OrderShipRequest:
+      type: object
+      required: [carrier, trackingNo]
+      properties:
+        carrier:
+          type: string
+        trackingNo:
+          type: string
+    OrderResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        buyerId:
+          type: string
+        status:
+          type: string
+          enum: [CREATED, PAID, SHIPPED, COMPLETED, CANCELLED]
+        totalAmount:
+          type: number
+          format: double
+        shippingCarrier:
+          type: string
+          nullable: true
+        trackingNo:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        shippedAt:
+          type: string
+          format: date-time
+          nullable: true
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/OrderItemResponse"
+    OrderItemResponse:
+      type: object
+      properties:
+        productId:
+          type: string
+        productName:
+          type: string
+        price:
+          type: number
+          format: double
+        quantity:
+          type: integer
+        amount:
+          type: number
+          format: double

@@ -9,9 +9,9 @@ Scope
 - Non-goals: promotions, coupons, search, reviews, after-sale, finance, multi-store operations beyond basic tenant header.
 
 Milestones
-M1. Catalog ready (admin + c browse)
-M2. Inventory ready (admin adjustments + c read)
-M3. Order flow ready (c create/pay, admin fulfill)
+M1. Catalog ready (admin + c browse) - DONE
+M2. Inventory ready (admin adjustments + c read) - DONE
+M3. Order flow ready (c create/pay, admin fulfill) - IN PROGRESS
 M4. MVP hardening (auth, validation, logging, docs)
 
 Common Conventions
@@ -107,6 +107,17 @@ M3. Order flow ready
 - Infra: order tables + mappers
 - C端: create/list/get/pay
 - Admin: list/get/ship
+
+Quick Verification (M3)
+- C create order: POST /api/c/orders
+- C pay order: POST /api/c/orders/{id}/pay
+- C list orders: GET /api/c/orders
+- Admin ship order: POST /api/admin/orders/{id}/ship
+
+Status Update
+- M1: done (catalog API)
+- M2: done (inventory API)
+- M3: partial (C端订单流程完成；管理端发货待联调)
 
 M4. MVP hardening
 - Validation (request DTO constraints)
