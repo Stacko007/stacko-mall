@@ -8,6 +8,7 @@ import org.mybatis.spring.annotation.MapperScan;
 @MapperScan("com.stacko.mall.infra.dao")
 public class StackoMallApplication {
 
+    
     public static void main(String[] args) {
         SpringApplication.run(StackoMallApplication.class, args);
     }

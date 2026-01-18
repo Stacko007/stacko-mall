@@ -1,4 +1,4 @@
-package com.stacko.mall.interfaces.web.controller;
+package com.stacko.mall.interfaces.web.admin;
 
 import com.stacko.mall.application.service.ProductApplicationService;
 import com.stacko.mall.application.command.CreateProductCommand;
@@ -24,9 +24,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-@RestController
-@RequestMapping("/mall/api/products")
-@Tag(name = "商城", description = "商品管理接口")
+@RestController("adminProductController")
+@RequestMapping("/api/admin/products")
+@Tag(name = "商城-管理端", description = "商品管理接口")
 public class ProductController {
     private final ProductApplicationService productApplicationService;
 
@@ -66,6 +66,7 @@ public class ProductController {
     }
 
     @GetMapping("/{id}")
+    @RequiresPermission("mall:product:read")
     public ProductResponse get(@RequestHeader("X-Tenant-ID") String tenantId,
                                @PathVariable("id") String id) {
         Product product = productApplicationService.get(tenantId, id);
@@ -73,6 +74,7 @@ public class ProductController {
     }
 
     @GetMapping
+    @RequiresPermission("mall:product:list")
     public List<ProductResponse> list(@RequestHeader("X-Tenant-ID") String tenantId) {
         return productApplicationService.list(tenantId).stream()
                 .map(ProductResponse::from)

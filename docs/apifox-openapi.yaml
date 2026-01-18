@@ -1,0 +1,384 @@
+openapi: 3.0.3
+info:
+  title: Stacko Mall API (MVP)
+  version: 0.1.0
+servers:
+  - url: http://localhost:8080
+tags:
+  - name: auth
+    description: Authentication
+  - name: mall-c
+    description: C端接口
+  - name: mall-admin
+    description: 管理端接口
+paths:
+  /api/auth/login:
+    post:
+      tags: [auth]
+      summary: 登录并返回 token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseAuthToken"
+  /api/admin/products:
+    get:
+      tags: [mall-admin]
+      summary: 管理端商品列表
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseProductList"
+    post:
+      tags: [mall-admin]
+      summary: 创建商品
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProductCreateRequest"
+      responses:
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseProduct"
+  /api/admin/products/{id}:
+    get:
+      tags: [mall-admin]
+      summary: 管理端商品详情
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/ProductId"
+      responses:
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseProduct"
+    put:
+      tags: [mall-admin]
+      summary: 更新商品
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/ProductId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProductUpdateRequest"
+      responses:
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseProduct"
+  /api/c/products:
+    get:
+      tags: [mall-c]
+      summary: C端商品列表
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseProductList"
+  /api/c/products/{id}:
+    get:
+      tags: [mall-c]
+      summary: C端商品详情
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/ProductId"
+      responses:
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseProduct"
+  /api/admin/stocks:
+    get:
+      tags: [mall-admin]
+      summary: 管理端库存列表
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseStockList"
+  /api/admin/stocks/{productId}:
+    get:
+      tags: [mall-admin]
+      summary: 管理端库存详情
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/ProductId"
+      responses:
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseStock"
+    put:
+      tags: [mall-admin]
+      summary: 设置库存
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/ProductId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StockSetRequest"
+      responses:
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseStock"
+  /api/admin/stocks/{productId}/adjust:
+    post:
+      tags: [mall-admin]
+      summary: 调整库存
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/ProductId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StockAdjustRequest"
+      responses:
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseStock"
+  /api/c/stocks/{productId}:
+    get:
+      tags: [mall-c]
+      summary: C端库存查询
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/ProductId"
+      responses:
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseStock"
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    ProductId:
+      name: productId
+      in: path
+      required: true
+      schema:
+        type: string
+    Id:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+  schemas:
+    ApiResponseAuthToken:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+          nullable: true
+        data:
+          $ref: "#/components/schemas/AuthToken"
+    ApiResponseProduct:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+          nullable: true
+        data:
+          $ref: "#/components/schemas/ProductResponse"
+    ApiResponseProductList:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+          nullable: true
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProductResponse"
+    ApiResponseStock:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+          nullable: true
+        data:
+          $ref: "#/components/schemas/StockResponse"
+    ApiResponseStockList:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+          nullable: true
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/StockResponse"
+    LoginRequest:
+      type: object
+      required: [username, password, tenantId]
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+        tenantId:
+          type: string
+        withRefresh:
+          type: boolean
+          default: true
+    AuthToken:
+      type: object
+      properties:
+        token:
+          type: string
+        refreshToken:
+          type: string
+        expiresAt:
+          type: string
+          format: date-time
+        refreshExpiresAt:
+          type: string
+          format: date-time
+        userId:
+          type: integer
+          format: int64
+        tenantId:
+          type: string
+    ProductCreateRequest:
+      type: object
+      required: [name, price]
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+          format: double
+    ProductUpdateRequest:
+      type: object
+      required: [name, price, status]
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+          format: double
+        status:
+          type: string
+          enum: [DRAFT, ONLINE, OFFLINE]
+    ProductResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        tenantId:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+          format: double
+        status:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    StockSetRequest:
+      type: object
+      required: [quantity]
+      properties:
+        quantity:
+          type: integer
+          minimum: 0
+    StockAdjustRequest:
+      type: object
+      required: [delta]
+      properties:
+        delta:
+          type: integer
+    StockResponse:
+      type: object
+      properties:
+        productId:
+          type: string
+        quantity:
+          type: integer
+        updatedAt:
+          type: string
+          format: date-time
