@@ -8,6 +8,7 @@ import com.stacko.mall.domain.model.Order;
 import com.stacko.mall.interfaces.web.dto.OrderCreateRequest;
 import com.stacko.mall.interfaces.web.dto.OrderItemRequest;
 import com.stacko.mall.interfaces.web.view.OrderResponse;
+import com.stacko.user.contract.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -32,39 +33,40 @@ public class OrderController {
     }
 
     @PostMapping
-    public OrderResponse create(@RequestHeader("X-Tenant-ID") String tenantId,
-                                @Valid @RequestBody OrderCreateRequest request) {
+    public ApiResponse<OrderResponse> create(@RequestHeader("X-Tenant-ID") String tenantId,
+                                             @Valid @RequestBody OrderCreateRequest request) {
         CreateOrderCommand command = new CreateOrderCommand();
         command.setTenantId(tenantId);
         command.setBuyerId(request.getBuyerId());
         command.setItems(request.getItems().stream().map(this::toItem).toList());
         Order order = orderApplicationService.create(command);
-        return OrderResponse.from(order);
+        return ApiResponse.ok(OrderResponse.from(order));
     }
 
     @PostMapping("/{id}/pay")
-    public OrderResponse pay(@RequestHeader("X-Tenant-ID") String tenantId,
-                             @PathVariable("id") String id) {
+    public ApiResponse<OrderResponse> pay(@RequestHeader("X-Tenant-ID") String tenantId,
+                                          @PathVariable("id") String id) {
         PayOrderCommand command = new PayOrderCommand();
         command.setTenantId(tenantId);
         command.setOrderId(id);
         Order order = orderApplicationService.pay(command);
-        return OrderResponse.from(order);
+        return ApiResponse.ok(OrderResponse.from(order));
     }
 
     @GetMapping("/{id}")
-    public OrderResponse get(@RequestHeader("X-Tenant-ID") String tenantId,
-                             @PathVariable("id") String id) {
+    public ApiResponse<OrderResponse> get(@RequestHeader("X-Tenant-ID") String tenantId,
+                                          @PathVariable("id") String id) {
         Order order = orderApplicationService.get(tenantId, id);
-        return OrderResponse.from(order);
+        return ApiResponse.ok(OrderResponse.from(order));
     }
 
     @GetMapping
-    public List<OrderResponse> list(@RequestHeader("X-Tenant-ID") String tenantId,
-                                    @RequestParam("buyerId") String buyerId) {
-        return orderApplicationService.listForBuyer(tenantId, buyerId).stream()
+    public ApiResponse<List<OrderResponse>> list(@RequestHeader("X-Tenant-ID") String tenantId,
+                                                 @RequestParam("buyerId") String buyerId) {
+        List<OrderResponse> responses = orderApplicationService.listForBuyer(tenantId, buyerId).stream()
                 .map(OrderResponse::from)
                 .toList();
+        return ApiResponse.ok(responses);
     }
 
     private OrderItemCommand toItem(OrderItemRequest request) {

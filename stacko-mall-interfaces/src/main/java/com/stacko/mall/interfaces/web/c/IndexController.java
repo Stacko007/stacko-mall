@@ -1,9 +1,10 @@
 package com.stacko.mall.interfaces.web.c;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+import com.stacko.user.contract.ApiResponse;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import io.swagger.v3.oas.annotations.tags.Tag;
 
 
 @RestController
@@ -12,7 +13,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 public class IndexController {
 
     @GetMapping({"", "/"})
-    public String index() {
-        return "Hello World!";
+    public ApiResponse<String> index() {
+        return ApiResponse.ok("Hello World!");
     }
 }

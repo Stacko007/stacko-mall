@@ -7,7 +7,7 @@ import com.stacko.mall.domain.model.Product;
 import com.stacko.mall.interfaces.web.dto.ProductCreateRequest;
 import com.stacko.mall.interfaces.web.view.ProductResponse;
 import com.stacko.user.contract.security.RequiresPermission;
-
+import com.stacko.user.contract.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -37,23 +37,23 @@ public class ProductController {
     @PostMapping
     @Operation(summary = "创建商品", description = "创建一个新的商品")
     @RequiresPermission("mall:product:create")
-    public ProductResponse create(@RequestHeader("X-Tenant-ID") String tenantId,
-                                  @Valid @RequestBody ProductCreateRequest request) {
+    public ApiResponse<ProductResponse> create(@RequestHeader("X-Tenant-ID") String tenantId,
+                                               @Valid @RequestBody ProductCreateRequest request) {
         CreateProductCommand command = new CreateProductCommand();
         command.setTenantId(tenantId);
         command.setName(request.getName());
         command.setDescription(request.getDescription());
         command.setPrice(request.getPrice());
         Product product = productApplicationService.create(command);
-        return ProductResponse.from(product);
+        return ApiResponse.ok(ProductResponse.from(product));
     }
 
     @PutMapping("/{id}")
     @Operation(summary = "更新商品", description = "更新一个已存在的商品")
     @RequiresPermission("mall:product:update")
-    public ProductResponse update(@RequestHeader("X-Tenant-ID") String tenantId,
-                                  @PathVariable("id") String id,
-                                  @Valid @RequestBody ProductUpdateRequest request) {
+    public ApiResponse<ProductResponse> update(@RequestHeader("X-Tenant-ID") String tenantId,
+                                               @PathVariable("id") String id,
+                                               @Valid @RequestBody ProductUpdateRequest request) {
         UpdateProductCommand command = new UpdateProductCommand();
         command.setTenantId(tenantId);
         command.setProductId(id);
@@ -62,22 +62,23 @@ public class ProductController {
         command.setPrice(request.getPrice());
         command.setStatus(request.getStatus());
         Product product = productApplicationService.update(command);
-        return ProductResponse.from(product);
+        return ApiResponse.ok(ProductResponse.from(product));
     }
 
     @GetMapping("/{id}")
     @RequiresPermission("mall:product:read")
-    public ProductResponse get(@RequestHeader("X-Tenant-ID") String tenantId,
-                               @PathVariable("id") String id) {
+    public ApiResponse<ProductResponse> get(@RequestHeader("X-Tenant-ID") String tenantId,
+                                            @PathVariable("id") String id) {
         Product product = productApplicationService.get(tenantId, id);
-        return ProductResponse.from(product);
+        return ApiResponse.ok(ProductResponse.from(product));
     }
 
     @GetMapping
     @RequiresPermission("mall:product:list")
-    public List<ProductResponse> list(@RequestHeader("X-Tenant-ID") String tenantId) {
-        return productApplicationService.list(tenantId).stream()
+    public ApiResponse<List<ProductResponse>> list(@RequestHeader("X-Tenant-ID") String tenantId) {
+        List<ProductResponse> responses = productApplicationService.list(tenantId).stream()
                 .map(ProductResponse::from)
                 .toList();
+        return ApiResponse.ok(responses);
     }
 }

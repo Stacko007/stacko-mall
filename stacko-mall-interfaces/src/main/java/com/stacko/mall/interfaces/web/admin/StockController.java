@@ -8,6 +8,7 @@ import com.stacko.mall.interfaces.web.dto.StockAdjustRequest;
 import com.stacko.mall.interfaces.web.dto.StockSetRequest;
 import com.stacko.mall.interfaces.web.view.StockResponse;
 import com.stacko.user.contract.security.RequiresPermission;
+import com.stacko.user.contract.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -33,43 +34,44 @@ public class StockController {
 
     @PutMapping("/{productId}")
     @RequiresPermission("mall:stock:set")
-    public StockResponse set(@RequestHeader("X-Tenant-ID") String tenantId,
-                             @PathVariable("productId") String productId,
-                             @Valid @RequestBody StockSetRequest request) {
+    public ApiResponse<StockResponse> set(@RequestHeader("X-Tenant-ID") String tenantId,
+                                          @PathVariable("productId") String productId,
+                                          @Valid @RequestBody StockSetRequest request) {
         SetStockCommand command = new SetStockCommand();
         command.setTenantId(tenantId);
         command.setProductId(productId);
         command.setQuantity(request.getQuantity());
         Stock stock = stockApplicationService.set(command);
-        return StockResponse.from(stock);
+        return ApiResponse.ok(StockResponse.from(stock));
     }
 
     @PostMapping("/{productId}/adjust")
     @RequiresPermission("mall:stock:adjust")
-    public StockResponse adjust(@RequestHeader("X-Tenant-ID") String tenantId,
-                                @PathVariable("productId") String productId,
-                                @Valid @RequestBody StockAdjustRequest request) {
+    public ApiResponse<StockResponse> adjust(@RequestHeader("X-Tenant-ID") String tenantId,
+                                             @PathVariable("productId") String productId,
+                                             @Valid @RequestBody StockAdjustRequest request) {
         AdjustStockCommand command = new AdjustStockCommand();
         command.setTenantId(tenantId);
         command.setProductId(productId);
         command.setDelta(request.getDelta());
         Stock stock = stockApplicationService.adjust(command);
-        return StockResponse.from(stock);
+        return ApiResponse.ok(StockResponse.from(stock));
     }
 
     @GetMapping("/{productId}")
     @RequiresPermission("mall:stock:read")
-    public StockResponse get(@RequestHeader("X-Tenant-ID") String tenantId,
-                             @PathVariable("productId") String productId) {
+    public ApiResponse<StockResponse> get(@RequestHeader("X-Tenant-ID") String tenantId,
+                                          @PathVariable("productId") String productId) {
         Stock stock = stockApplicationService.get(tenantId, productId);
-        return StockResponse.from(stock);
+        return ApiResponse.ok(StockResponse.from(stock));
     }
 
     @GetMapping
     @RequiresPermission("mall:stock:list")
-    public List<StockResponse> list(@RequestHeader("X-Tenant-ID") String tenantId) {
-        return stockApplicationService.list(tenantId).stream()
+    public ApiResponse<List<StockResponse>> list(@RequestHeader("X-Tenant-ID") String tenantId) {
+        List<StockResponse> responses = stockApplicationService.list(tenantId).stream()
                 .map(StockResponse::from)
                 .toList();
+        return ApiResponse.ok(responses);
     }
 }

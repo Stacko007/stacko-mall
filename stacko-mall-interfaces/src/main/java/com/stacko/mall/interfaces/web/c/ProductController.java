@@ -3,6 +3,7 @@ package com.stacko.mall.interfaces.web.c;
 import com.stacko.mall.application.service.ProductApplicationService;
 import com.stacko.mall.domain.model.Product;
 import com.stacko.mall.interfaces.web.view.ProductResponse;
+import com.stacko.user.contract.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -23,16 +24,17 @@ public class ProductController {
     }
 
     @GetMapping
-    public List<ProductResponse> list(@RequestHeader("X-Tenant-ID") String tenantId) {
-        return productApplicationService.list(tenantId).stream()
+    public ApiResponse<List<ProductResponse>> list(@RequestHeader("X-Tenant-ID") String tenantId) {
+        List<ProductResponse> responses = productApplicationService.list(tenantId).stream()
                 .map(ProductResponse::from)
                 .toList();
+        return ApiResponse.ok(responses);
     }
 
     @GetMapping("/{id}")
-    public ProductResponse get(@RequestHeader("X-Tenant-ID") String tenantId,
-                               @PathVariable("id") String id) {
+    public ApiResponse<ProductResponse> get(@RequestHeader("X-Tenant-ID") String tenantId,
+                                            @PathVariable("id") String id) {
         Product product = productApplicationService.get(tenantId, id);
-        return ProductResponse.from(product);
+        return ApiResponse.ok(ProductResponse.from(product));
     }
 }

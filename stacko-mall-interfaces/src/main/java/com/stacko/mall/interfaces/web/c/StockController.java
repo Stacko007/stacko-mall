@@ -3,6 +3,7 @@ package com.stacko.mall.interfaces.web.c;
 import com.stacko.mall.application.service.StockApplicationService;
 import com.stacko.mall.domain.model.Stock;
 import com.stacko.mall.interfaces.web.view.StockResponse;
+import com.stacko.user.contract.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -21,9 +22,9 @@ public class StockController {
     }
 
     @GetMapping("/{productId}")
-    public StockResponse get(@RequestHeader("X-Tenant-ID") String tenantId,
-                             @PathVariable("productId") String productId) {
+    public ApiResponse<StockResponse> get(@RequestHeader("X-Tenant-ID") String tenantId,
+                                          @PathVariable("productId") String productId) {
         Stock stock = stockApplicationService.get(tenantId, productId);
-        return StockResponse.from(stock);
+        return ApiResponse.ok(StockResponse.from(stock));
     }
 }

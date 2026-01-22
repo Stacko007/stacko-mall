@@ -11,12 +11,14 @@ import com.stacko.mall.domain.model.ProductId;
 import com.stacko.mall.domain.model.Stock;
 import com.stacko.mall.domain.repository.OrderRepository;
 import com.stacko.mall.domain.repository.StockRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
+@Slf4j
 public class OrderApplicationService {
     private final OrderRepository orderRepository;
     private final StockRepository stockRepository;
@@ -33,25 +35,54 @@ public class OrderApplicationService {
                 .toList();
         Order order = Order.create(command.getTenantId(), command.getBuyerId(), items);
         reserveStock(command.getTenantId(), items);
-        return orderRepository.save(order);
+        Order saved = orderRepository.save(order);
+        log.info("Order created. tenantId={}, orderId={}, status={}", command.getTenantId(), saved.getId().value(), saved.getStatus());
+        return saved;
     }
 
     @Transactional
     public Order pay(PayOrderCommand command) {
         Order order = orderRepository
                 .findById(command.getTenantId(), new OrderId(command.getOrderId()))
-                .orElseThrow(() -> new IllegalArgumentException("Order not found"));
-        order.pay();
-        return orderRepository.save(order);
+                .orElse(null);
+        if (order == null) {
+            log.warn("Order pay failed: order not found. tenantId={}, orderId={}", command.getTenantId(), command.getOrderId());
+            throw new IllegalArgumentException("Order not found");
+        }
+        var before = order.getStatus();
+        try {
+            order.pay();
+        } catch (RuntimeException ex) {
+            log.warn("Order pay failed: invalid state. tenantId={}, orderId={}, status={}, reason={}",
+                    command.getTenantId(), command.getOrderId(), before, ex.getMessage());
+            throw ex;
+        }
+        Order saved = orderRepository.save(order);
+        log.info("Order paid. tenantId={}, orderId={}, status={} -> {}", command.getTenantId(), command.getOrderId(), before, saved.getStatus());
+        return saved;
     }
 
     @Transactional
     public Order ship(ShipOrderCommand command) {
         Order order = orderRepository
                 .findById(command.getTenantId(), new OrderId(command.getOrderId()))
-                .orElseThrow(() -> new IllegalArgumentException("Order not found"));
-        order.ship(command.getCarrier(), command.getTrackingNo());
-        return orderRepository.save(order);
+                .orElse(null);
+        if (order == null) {
+            log.warn("Order ship failed: order not found. tenantId={}, orderId={}", command.getTenantId(), command.getOrderId());
+            throw new IllegalArgumentException("Order not found");
+        }
+        var before = order.getStatus();
+        try {
+            order.ship(command.getCarrier(), command.getTrackingNo());
+        } catch (RuntimeException ex) {
+            log.warn("Order ship failed: invalid state. tenantId={}, orderId={}, status={}, carrier={}, trackingNo={}, reason={}",
+                    command.getTenantId(), command.getOrderId(), before, command.getCarrier(), command.getTrackingNo(), ex.getMessage());
+            throw ex;
+        }
+        Order saved = orderRepository.save(order);
+        log.info("Order shipped. tenantId={}, orderId={}, status={} -> {}, carrier={}, trackingNo={}",
+                command.getTenantId(), command.getOrderId(), before, saved.getStatus(), command.getCarrier(), command.getTrackingNo());
+        return saved;
     }
 
     public Order get(String tenantId, String orderId) {
