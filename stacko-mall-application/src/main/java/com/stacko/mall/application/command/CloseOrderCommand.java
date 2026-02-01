@@ -1,9 +1,8 @@
 package com.stacko.mall.application.command;
 
-public class PayOrderCommand {
+public class CloseOrderCommand {
     private String tenantId;
     private String orderId;
-    private String idempotencyKey;
 
     public String getTenantId() {
         return tenantId;
@@ -19,13 +18,5 @@ public class PayOrderCommand {
 
     public void setOrderId(String orderId) {
         this.orderId = orderId;
-    }
-
-    public String getIdempotencyKey() {
-        return idempotencyKey;
-    }
-
-    public void setIdempotencyKey(String idempotencyKey) {
-        this.idempotencyKey = idempotencyKey;
     }
 }

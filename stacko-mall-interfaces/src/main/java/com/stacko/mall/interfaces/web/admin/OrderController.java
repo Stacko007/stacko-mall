@@ -1,5 +1,6 @@
 package com.stacko.mall.interfaces.web.admin;
 
+import com.stacko.mall.application.command.CloseOrderCommand;
 import com.stacko.mall.application.command.ShipOrderCommand;
 import com.stacko.mall.application.service.OrderApplicationService;
 import com.stacko.mall.domain.model.Order;
@@ -63,6 +64,17 @@ public class OrderController {
         command.setCarrier(request.getCarrier());
         command.setTrackingNo(request.getTrackingNo());
         Order order = orderApplicationService.ship(command);
+        return ApiResponse.ok(OrderResponse.from(order));
+    }
+
+    @PostMapping("/{id}/close")
+    @RequiresPermission("mall:order:close")
+    public ApiResponse<OrderResponse> close(@RequestHeader("X-Tenant-ID") @NotBlank String tenantId,
+                                            @PathVariable("id") @NotBlank String id) {
+        CloseOrderCommand command = new CloseOrderCommand();
+        command.setTenantId(tenantId);
+        command.setOrderId(id);
+        Order order = orderApplicationService.close(command);
         return ApiResponse.ok(OrderResponse.from(order));
     }
 }

@@ -1,5 +1,6 @@
 package com.stacko.mall.interfaces.web.c;
 
+import com.stacko.mall.application.command.CancelOrderCommand;
 import com.stacko.mall.application.command.CreateOrderCommand;
 import com.stacko.mall.application.command.OrderItemCommand;
 import com.stacko.mall.application.command.PayOrderCommand;
@@ -34,9 +35,11 @@ public class OrderController {
 
     @PostMapping
     public ApiResponse<OrderResponse> create(@RequestHeader("X-Tenant-ID") String tenantId,
+                                             @RequestHeader("X-Idempotency-Key") String idempotencyKey,
                                              @Valid @RequestBody OrderCreateRequest request) {
         CreateOrderCommand command = new CreateOrderCommand();
         command.setTenantId(tenantId);
+        command.setIdempotencyKey(idempotencyKey);
         command.setBuyerId(request.getBuyerId());
         command.setItems(request.getItems().stream().map(this::toItem).toList());
         Order order = orderApplicationService.create(command);
@@ -45,11 +48,25 @@ public class OrderController {
 
     @PostMapping("/{id}/pay")
     public ApiResponse<OrderResponse> pay(@RequestHeader("X-Tenant-ID") String tenantId,
+                                          @RequestHeader("X-Idempotency-Key") String idempotencyKey,
                                           @PathVariable("id") String id) {
         PayOrderCommand command = new PayOrderCommand();
         command.setTenantId(tenantId);
+        command.setIdempotencyKey(idempotencyKey);
         command.setOrderId(id);
         Order order = orderApplicationService.pay(command);
+        return ApiResponse.ok(OrderResponse.from(order));
+    }
+
+    @PostMapping("/{id}/cancel")
+    public ApiResponse<OrderResponse> cancel(@RequestHeader("X-Tenant-ID") String tenantId,
+                                             @RequestHeader("X-Idempotency-Key") String idempotencyKey,
+                                             @PathVariable("id") String id) {
+        CancelOrderCommand command = new CancelOrderCommand();
+        command.setTenantId(tenantId);
+        command.setIdempotencyKey(idempotencyKey);
+        command.setOrderId(id);
+        Order order = orderApplicationService.cancel(command);
         return ApiResponse.ok(OrderResponse.from(order));
     }
 

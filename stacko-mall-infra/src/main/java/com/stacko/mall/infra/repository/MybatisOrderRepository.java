@@ -1,6 +1,7 @@
 package com.stacko.mall.infra.repository;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.stacko.mall.domain.enums.OrderStatus;
 import com.stacko.mall.domain.model.Order;
 import com.stacko.mall.domain.model.OrderId;
 import com.stacko.mall.domain.model.OrderItem;
@@ -12,6 +13,9 @@ import com.stacko.mall.infra.po.OrderItemEntity;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -79,11 +83,29 @@ public class MybatisOrderRepository implements OrderRepository {
                 .toList();
     }
 
+    @Override
+    public List<Order> listByStatusCreatedBefore(OrderStatus status, Instant cutoff, int limit) {
+        LambdaQueryWrapper<OrderEntity> query = new LambdaQueryWrapper<>();
+        query.eq(OrderEntity::getStatus, status)
+                .lt(OrderEntity::getCreatedAt, toLocalDateTime(cutoff))
+                .orderByAsc(OrderEntity::getCreatedAt);
+        if (limit > 0) {
+            query.last("limit " + limit);
+        }
+        return orderMapper.selectList(query).stream()
+                .map(entity -> entity.toDomain(listItems(entity.getId())))
+                .toList();
+    }
+
     private List<OrderItem> listItems(String orderId) {
         LambdaQueryWrapper<OrderItemEntity> query = new LambdaQueryWrapper<>();
         query.eq(OrderItemEntity::getOrderId, orderId);
         return orderItemMapper.selectList(query).stream()
                 .map(OrderItemEntity::toDomain)
                 .toList();
+    }
+
+    private static LocalDateTime toLocalDateTime(Instant instant) {
+        return instant == null ? null : LocalDateTime.ofInstant(instant, ZoneOffset.UTC);
     }
 }

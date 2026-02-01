@@ -90,19 +90,32 @@ public class Order {
     }
 
     public void complete() {
+        confirm();
+    }
+
+    public void cancel() {
+        if (status != OrderStatus.CREATED) {
+            throw new IllegalStateException("Order cannot be cancelled");
+        }
+        status = OrderStatus.CANCELLED;
+        this.updatedAt = Instant.now();
+    }
+
+    public void close() {
+        if (status == OrderStatus.SHIPPED || status == OrderStatus.COMPLETED
+                || status == OrderStatus.CANCELLED || status == OrderStatus.CLOSED) {
+            throw new IllegalStateException("Order cannot be closed");
+        }
+        status = OrderStatus.CLOSED;
+        this.updatedAt = Instant.now();
+    }
+
+    public void confirm() {
         if (status != OrderStatus.SHIPPED) {
             throw new IllegalStateException("Order not shipped");
         }
         this.completedAt = Instant.now();
         this.status = OrderStatus.COMPLETED;
-        this.updatedAt = Instant.now();
-    }
-
-    public void cancel() {
-        if (status == OrderStatus.SHIPPED || status == OrderStatus.COMPLETED) {
-            throw new IllegalStateException("Order cannot be cancelled");
-        }
-        this.status = OrderStatus.CANCELLED;
         this.updatedAt = Instant.now();
     }
 

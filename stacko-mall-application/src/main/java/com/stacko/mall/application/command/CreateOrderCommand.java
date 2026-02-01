@@ -6,6 +6,7 @@ public class CreateOrderCommand {
     private String tenantId;
     private String buyerId;
     private List<OrderItemCommand> items;
+    private String idempotencyKey;
 
     public String getTenantId() {
         return tenantId;
@@ -29,5 +30,13 @@ public class CreateOrderCommand {
 
     public void setItems(List<OrderItemCommand> items) {
         this.items = items;
+    }
+
+    public String getIdempotencyKey() {
+        return idempotencyKey;
+    }
+
+    public void setIdempotencyKey(String idempotencyKey) {
+        this.idempotencyKey = idempotencyKey;
     }
 }

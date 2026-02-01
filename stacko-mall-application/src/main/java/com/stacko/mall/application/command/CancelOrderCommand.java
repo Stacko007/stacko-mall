@@ -1,6 +1,6 @@
 package com.stacko.mall.application.command;
 
-public class PayOrderCommand {
+public class CancelOrderCommand {
     private String tenantId;
     private String orderId;
     private String idempotencyKey;

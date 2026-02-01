@@ -3,9 +3,11 @@ package com.stacko.mall.bootstrap;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.mybatis.spring.annotation.MapperScan;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication(scanBasePackages = {"com.stacko.mall", "com.stacko.user"})
 @MapperScan("com.stacko.mall.infra.dao")
+@EnableScheduling
 public class StackoMallApplication {
 
     

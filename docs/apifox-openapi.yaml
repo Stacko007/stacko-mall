@@ -213,6 +213,8 @@ paths:
       summary: C端创建订单
       security:
         - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
       requestBody:
         required: true
         content:
@@ -267,6 +269,23 @@ paths:
         - bearerAuth: []
       parameters:
         - $ref: "#/components/parameters/Id"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseOrder"
+  /api/c/orders/{id}/cancel:
+    post:
+      tags: [mall-c]
+      summary: C端订单取消
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+        - $ref: "#/components/parameters/IdempotencyKey"
       responses:
         "200":
           description: ok
@@ -329,6 +348,21 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApiResponseOrder"
+  /api/admin/orders/{id}/close:
+    post:
+      tags: [mall-admin]
+      summary: 管理端订单关闭
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseOrder"
 components:
   securitySchemes:
     bearerAuth:
@@ -348,6 +382,12 @@ components:
       required: true
       schema:
         type: string
+    IdempotencyKey:
+      name: X-Idempotency-Key
+      in: header
+      required: true
+      schema:
+        type: string
   schemas:
     ApiResponseAuthToken:
       type: object
@@ -359,6 +399,26 @@ components:
           nullable: true
         data:
           $ref: "#/components/schemas/AuthToken"
+  x-idempotency-guidelines:
+    title: X-Idempotency-Key 规范
+    description: |
+      目的：保证创建订单/支付/取消等写操作在网络重试或重复点击时只生效一次。
+
+      生成规则：
+      1) 在“同一次业务意图”内保持稳定（重试必须使用同一个 key）。
+      2) 新的一次业务操作必须生成新的 key。
+      3) 推荐使用 UUID v4 或“业务语义+随机数/时间戳”组合。
+
+      推荐格式：
+      - UUID: 9f4f8c59-8e7a-4f6a-9a9d-1c8b7f1e6b3c
+      - 语义化: ORDER_CREATE:{buyerId}:{yyyyMMdd}:{rand}
+
+      场景示例：
+      - 创建订单: X-Idempotency-Key: 4d2e3b9f-3e1e-4d4a-9f18-71dcaf4a4f05
+      - 订单支付: X-Idempotency-Key: PAY:842444e0-0bad-49e8-88ec-89a03c357c49:ef7c2f3a
+      - 取消订单: X-Idempotency-Key: CANCEL:842444e0-0bad-49e8-88ec-89a03c357c49:95b2c1d9
+      - 管理端关单: X-Idempotency-Key: CLOSE:842444e0-0bad-49e8-88ec-89a03c357c49:ad13e7b1
+      - 退款申请: X-Idempotency-Key: REFUND:842444e0-0bad-49e8-88ec-89a03c357c49:1b9ef3
     ApiResponseProduct:
       type: object
       properties:
