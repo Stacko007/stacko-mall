@@ -21,3 +21,7 @@ order:
     minutes: 30
     batch-size: 200
     fixed-delay-ms: 60000
+
+payment:
+  mock:
+    callback-secret: stacko-mall-callback-secret

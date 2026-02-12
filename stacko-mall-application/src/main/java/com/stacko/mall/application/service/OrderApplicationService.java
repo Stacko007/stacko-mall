@@ -25,13 +25,16 @@ public class OrderApplicationService {
     private final OrderRepository orderRepository;
     private final StockRepository stockRepository;
     private final IdempotencyService idempotencyService;
+    private final PaymentApplicationService paymentApplicationService;
 
     public OrderApplicationService(OrderRepository orderRepository,
                                    StockRepository stockRepository,
-                                   IdempotencyService idempotencyService) {
+                                   IdempotencyService idempotencyService,
+                                   PaymentApplicationService paymentApplicationService) {
         this.orderRepository = orderRepository;
         this.stockRepository = stockRepository;
         this.idempotencyService = idempotencyService;
+        this.paymentApplicationService = paymentApplicationService;
     }
 
     @Transactional
@@ -106,6 +109,7 @@ public class OrderApplicationService {
             throw ex;
         }
         try {
+            paymentApplicationService.createOrPayMock(command.getTenantId(), order);
             Order saved = orderRepository.save(order);
             idempotencyService.markSuccess(idempotency, saved.getId().value());
             log.info("Order paid. tenantId={}, orderId={}, status={} -> {}", command.getTenantId(), command.getOrderId(), before, saved.getStatus());

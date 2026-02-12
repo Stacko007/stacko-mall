@@ -293,6 +293,25 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApiResponseOrder"
+  /api/c/payments/callback:
+    post:
+      tags: [mall-c]
+      summary: 支付回调（mock）
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PaymentCallbackRequest"
+      responses:
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseString"
   /api/admin/orders:
     get:
       tags: [mall-admin]
@@ -399,26 +418,6 @@ components:
           nullable: true
         data:
           $ref: "#/components/schemas/AuthToken"
-  x-idempotency-guidelines:
-    title: X-Idempotency-Key 规范
-    description: |
-      目的：保证创建订单/支付/取消等写操作在网络重试或重复点击时只生效一次。
-
-      生成规则：
-      1) 在“同一次业务意图”内保持稳定（重试必须使用同一个 key）。
-      2) 新的一次业务操作必须生成新的 key。
-      3) 推荐使用 UUID v4 或“业务语义+随机数/时间戳”组合。
-
-      推荐格式：
-      - UUID: 9f4f8c59-8e7a-4f6a-9a9d-1c8b7f1e6b3c
-      - 语义化: ORDER_CREATE:{buyerId}:{yyyyMMdd}:{rand}
-
-      场景示例：
-      - 创建订单: X-Idempotency-Key: 4d2e3b9f-3e1e-4d4a-9f18-71dcaf4a4f05
-      - 订单支付: X-Idempotency-Key: PAY:842444e0-0bad-49e8-88ec-89a03c357c49:ef7c2f3a
-      - 取消订单: X-Idempotency-Key: CANCEL:842444e0-0bad-49e8-88ec-89a03c357c49:95b2c1d9
-      - 管理端关单: X-Idempotency-Key: CLOSE:842444e0-0bad-49e8-88ec-89a03c357c49:ad13e7b1
-      - 退款申请: X-Idempotency-Key: REFUND:842444e0-0bad-49e8-88ec-89a03c357c49:1b9ef3
     ApiResponseProduct:
       type: object
       properties:
@@ -485,6 +484,16 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/OrderResponse"
+    ApiResponseString:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+          nullable: true
+        data:
+          type: string
     LoginRequest:
       type: object
       required: [username, password, tenantId]
@@ -618,6 +627,23 @@ components:
           type: string
         trackingNo:
           type: string
+    PaymentCallbackRequest:
+      type: object
+      required: [callbackId, orderId, tradeNo, status, signature]
+      properties:
+        callbackId:
+          type: string
+        orderId:
+          type: string
+        tradeNo:
+          type: string
+        status:
+          type: string
+          enum: [PAID, FAILED]
+        signature:
+          type: string
+        rawPayload:
+          type: string
     OrderResponse:
       type: object
       properties:
@@ -627,7 +653,7 @@ components:
           type: string
         status:
           type: string
-          enum: [CREATED, PAID, SHIPPED, COMPLETED, CANCELLED]
+          enum: [CREATED, PAID, SHIPPED, COMPLETED, CANCELLED, CLOSED]
         totalAmount:
           type: number
           format: double
@@ -670,3 +696,23 @@ components:
         amount:
           type: number
           format: double
+x-idempotency-guidelines:
+  title: X-Idempotency-Key 规范
+  description: |
+    目的：保证创建订单/支付/取消等写操作在网络重试或重复点击时只生效一次。
+
+    生成规则：
+    1) 在“同一次业务意图”内保持稳定（重试必须使用同一个 key）。
+    2) 新的一次业务操作必须生成新的 key。
+    3) 推荐使用 UUID v4 或“业务语义+随机数/时间戳”组合。
+
+    推荐格式：
+    - UUID: 9f4f8c59-8e7a-4f6a-9a9d-1c8b7f1e6b3c
+    - 语义化: ORDER_CREATE:{buyerId}:{yyyyMMdd}:{rand}
+
+    场景示例：
+    - 创建订单: X-Idempotency-Key: 4d2e3b9f-3e1e-4d4a-9f18-71dcaf4a4f05
+    - 订单支付: X-Idempotency-Key: PAY:842444e0-0bad-49e8-88ec-89a03c357c49:ef7c2f3a
+    - 取消订单: X-Idempotency-Key: CANCEL:842444e0-0bad-49e8-88ec-89a03c357c49:95b2c1d9
+    - 管理端关单: X-Idempotency-Key: CLOSE:842444e0-0bad-49e8-88ec-89a03c357c49:ad13e7b1
+    - 退款申请: X-Idempotency-Key: REFUND:842444e0-0bad-49e8-88ec-89a03c357c49:1b9ef3

@@ -15,6 +15,19 @@ M2. Payment integration (real payment + callback + state machine)
 M3. After-sales (refund/cancel flow, admin audit)
 M4. Observability + automation (logging, metrics, smoke tests)
 
+Current Progress Snapshot (updated: 2026-02-12)
+- Overall: Phase2 in progress. M1 done; M2 partially done; M3/M4 not started.
+- M1 status: DONE
+- Completed: A1 (order transition rules), A2 (stock rollback on cancel/close), A3 (idempotency for create/pay/cancel), A4 (timeout close scheduled job).
+- Verified: cancel/close endpoints available and tested; idempotency repeat behavior verified.
+- M2 status: IN PROGRESS
+- Completed: A5 (Payment aggregate + repository + mapper), A6 (pay flow creates/updates payment), A7 (payment callback + signature verify + callback idempotency).
+- Verified: pay API sets order to PAID; callback API returns success and is idempotent on callback replay.
+- Hotfix done: adjusted DB length for UUID-related fields (`biz_id` etc.) to avoid "Data too long" conflict.
+- Pending next: A8 admin payment query API + response DTO.
+- M3 status: TODO
+- M4 status: TODO
+
 Common Conventions
 - Tenant header: X-Tenant-ID required.
 - Auth: JWT/Sa-Token via stacko-user; admin endpoints use @RequiresPermission.

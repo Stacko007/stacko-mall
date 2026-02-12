@@ -2,9 +2,9 @@
 
 -- Payment table
 CREATE TABLE IF NOT EXISTS mall_payment (
-  id            VARCHAR(32)   NOT NULL PRIMARY KEY,
-  tenant_id     VARCHAR(32)   NOT NULL,
-  order_id      VARCHAR(32)   NOT NULL,
+  id            VARCHAR(64)   NOT NULL PRIMARY KEY,
+  tenant_id     VARCHAR(64)   NOT NULL,
+  order_id      VARCHAR(64)   NOT NULL,
   amount        DECIMAL(18,2) NOT NULL,
   status        VARCHAR(32)   NOT NULL,
   channel       VARCHAR(32)   NOT NULL,
@@ -19,10 +19,10 @@ CREATE TABLE IF NOT EXISTS mall_payment (
 
 -- After-sales table
 CREATE TABLE IF NOT EXISTS mall_after_sales (
-  id            VARCHAR(32)  NOT NULL PRIMARY KEY,
-  tenant_id     VARCHAR(32)  NOT NULL,
-  order_id      VARCHAR(32)  NOT NULL,
-  payment_id    VARCHAR(32)  NULL,
+  id            VARCHAR(64)  NOT NULL PRIMARY KEY,
+  tenant_id     VARCHAR(64)  NOT NULL,
+  order_id      VARCHAR(64)  NOT NULL,
+  payment_id    VARCHAR(64)  NULL,
   type          VARCHAR(32)  NOT NULL,
   reason        VARCHAR(256) NOT NULL,
   status        VARCHAR(32)  NOT NULL,
@@ -36,10 +36,10 @@ CREATE TABLE IF NOT EXISTS mall_after_sales (
 -- Idempotency table
 CREATE TABLE IF NOT EXISTS mall_idempotency (
   id            BIGINT       NOT NULL AUTO_INCREMENT PRIMARY KEY,
-  tenant_id     VARCHAR(32)  NOT NULL,
+  tenant_id     VARCHAR(64)  NOT NULL,
   idempotency_key VARCHAR(64) NOT NULL,
   biz_type      VARCHAR(32)  NOT NULL,
-  biz_id        VARCHAR(32)  NULL,
+  biz_id        VARCHAR(64)  NULL,
   status        VARCHAR(32)  NOT NULL,
   created_at    TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at    TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
