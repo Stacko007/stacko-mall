@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS mall_after_sales (
 CREATE TABLE IF NOT EXISTS mall_idempotency (
   id            BIGINT       NOT NULL AUTO_INCREMENT PRIMARY KEY,
   tenant_id     VARCHAR(64)  NOT NULL,
-  idempotency_key VARCHAR(64) NOT NULL,
+  idempotency_key VARCHAR(128) NOT NULL,
   biz_type      VARCHAR(32)  NOT NULL,
   biz_id        VARCHAR(64)  NULL,
   status        VARCHAR(32)  NOT NULL,

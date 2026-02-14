@@ -15,6 +15,16 @@ sa-token:
   is-read-body: false
   is-read-header: true
 
+stacko:
+  user:
+    token:
+      jwt:
+        exclude-paths:
+          - /api/c/products
+          - /api/c/products/**
+          - /api/c/payments/callback
+          - /api/c/stocks/**
+
 order:
   timeout:
     job-enabled: true

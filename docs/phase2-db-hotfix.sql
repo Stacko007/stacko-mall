@@ -2,6 +2,7 @@
 
 ALTER TABLE mall_idempotency
   MODIFY COLUMN tenant_id VARCHAR(64) NOT NULL,
+  MODIFY COLUMN idempotency_key VARCHAR(128) NOT NULL,
   MODIFY COLUMN biz_id VARCHAR(64) NULL;
 
 ALTER TABLE mall_payment

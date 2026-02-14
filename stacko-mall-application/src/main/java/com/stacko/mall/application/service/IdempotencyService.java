@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class IdempotencyService {
+    private static final int MAX_KEY_LENGTH = 128;
     private final IdempotencyRepository idempotencyRepository;
 
     public IdempotencyService(IdempotencyRepository idempotencyRepository) {
@@ -17,6 +18,7 @@ public class IdempotencyService {
 
     @Transactional
     public AcquireResult acquire(String tenantId, String idempotencyKey, String bizType) {
+        validateInputs(tenantId, idempotencyKey, bizType);
         IdempotencyRecord record = idempotencyRepository
                 .find(tenantId, idempotencyKey, bizType)
                 .orElse(null);
@@ -57,6 +59,21 @@ public class IdempotencyService {
 
     public boolean isInProgress(IdempotencyRecord record) {
         return record.getStatus() == IdempotencyStatus.IN_PROGRESS;
+    }
+
+    private void validateInputs(String tenantId, String idempotencyKey, String bizType) {
+        if (tenantId == null || tenantId.isBlank()) {
+            throw new IllegalArgumentException("Tenant id required");
+        }
+        if (bizType == null || bizType.isBlank()) {
+            throw new IllegalArgumentException("Biz type required");
+        }
+        if (idempotencyKey == null || idempotencyKey.isBlank()) {
+            throw new IllegalArgumentException("Idempotency key required");
+        }
+        if (idempotencyKey.length() > MAX_KEY_LENGTH) {
+            throw new IllegalArgumentException("Idempotency key too long, max length is " + MAX_KEY_LENGTH);
+        }
     }
 
     public static class AcquireResult {

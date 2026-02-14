@@ -37,3 +37,6 @@ build/
 ### Mac OS ###
 .DS_Store
 logs
+
+stacko-mall-admin-frontend/node_modules/*
+stacko-mall-frontend/node_modules/*

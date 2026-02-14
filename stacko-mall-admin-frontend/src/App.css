@@ -1,0 +1,87 @@
+.app-layout {
+  min-height: 100vh;
+  background: #eef1f5;
+}
+
+.app-sider {
+  background: #0b1a2f;
+}
+
+.app-brand {
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 600;
+  color: #f5f7fb;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.app-header {
+  padding: 0 24px;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #e8eaef;
+}
+
+.header-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.header-tag {
+  margin-left: 4px;
+}
+
+.app-content {
+  padding: 24px;
+  background: linear-gradient(180deg, #f5f7fa 0%, #eef1f5 100%);
+  min-height: calc(100vh - 64px);
+}
+
+.admin-tabs {
+  margin-bottom: 16px;
+  background: #ffffff;
+  padding: 8px 12px 0;
+  border-radius: 12px;
+  box-shadow: 0 10px 24px rgba(14, 20, 34, 0.06);
+}
+
+.card-shadow {
+  box-shadow: 0 10px 30px rgba(14, 20, 34, 0.08);
+  border-radius: 12px;
+}
+
+.login-wrap {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at top, #f2f6ff 0%, #e8edf5 60%, #dde4ef 100%);
+  padding: 24px;
+}
+
+.login-card {
+  width: 420px;
+  border-radius: 16px;
+  box-shadow: 0 20px 40px rgba(11, 26, 47, 0.12);
+}
+
+.login-title {
+  margin-bottom: 8px;
+}
+
+@media (max-width: 768px) {
+  .app-content {
+    padding: 16px;
+  }
+
+  .login-card {
+    width: 100%;
+  }
+}

@@ -312,6 +312,40 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApiResponseString"
+  /api/c/after-sales:
+    post:
+      tags: [mall-c]
+      summary: C端申请售后
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AfterSalesApplyRequest"
+      responses:
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseAfterSales"
+  /api/c/after-sales/{id}:
+    get:
+      tags: [mall-c]
+      summary: C端售后详情
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseAfterSales"
   /api/admin/orders:
     get:
       tags: [mall-admin]
@@ -382,6 +416,63 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApiResponseOrder"
+  /api/admin/payments/{id}:
+    get:
+      tags: [mall-admin]
+      summary: 管理端支付详情
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponsePayment"
+  /api/admin/after-sales/{id}/review:
+    post:
+      tags: [mall-admin]
+      summary: 管理端审核售后
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AfterSalesReviewRequest"
+      responses:
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseAfterSales"
+  /api/admin/after-sales/{id}/refund:
+    post:
+      tags: [mall-admin]
+      summary: 管理端确认退款
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AfterSalesRefundRequest"
+      responses:
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseAfterSales"
 components:
   securitySchemes:
     bearerAuth:
@@ -484,6 +575,26 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/OrderResponse"
+    ApiResponsePayment:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+          nullable: true
+        data:
+          $ref: "#/components/schemas/PaymentResponse"
+    ApiResponseAfterSales:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+          nullable: true
+        data:
+          $ref: "#/components/schemas/AfterSalesResponse"
     ApiResponseString:
       type: object
       properties:
@@ -644,6 +755,30 @@ components:
           type: string
         rawPayload:
           type: string
+    AfterSalesApplyRequest:
+      type: object
+      required: [orderId, type, reason]
+      properties:
+        orderId:
+          type: string
+        type:
+          type: string
+          enum: [REFUND_ONLY, RETURN_REFUND]
+        reason:
+          type: string
+    AfterSalesReviewRequest:
+      type: object
+      required: [approved]
+      properties:
+        approved:
+          type: boolean
+        remark:
+          type: string
+    AfterSalesRefundRequest:
+      type: object
+      properties:
+        remark:
+          type: string
     OrderResponse:
       type: object
       properties:
@@ -681,6 +816,61 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/OrderItemResponse"
+    PaymentResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        orderId:
+          type: string
+        amount:
+          type: number
+          format: double
+        status:
+          type: string
+          enum: [CREATED, PAID, FAILED, REFUNDED]
+        channel:
+          type: string
+          enum: [MOCK, ALIPAY, WECHAT]
+        tradeNo:
+          type: string
+          nullable: true
+        rawCallback:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    AfterSalesResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        orderId:
+          type: string
+        paymentId:
+          type: string
+          nullable: true
+        type:
+          type: string
+          enum: [REFUND_ONLY, RETURN_REFUND]
+        reason:
+          type: string
+        status:
+          type: string
+          enum: [APPLIED, APPROVED, REJECTED, REFUNDED, CANCELLED]
+        remark:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
     OrderItemResponse:
       type: object
       properties:

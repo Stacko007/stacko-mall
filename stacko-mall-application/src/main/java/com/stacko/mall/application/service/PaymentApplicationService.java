@@ -95,6 +95,11 @@ public class PaymentApplicationService {
         }
     }
 
+    public Payment get(String tenantId, String paymentId) {
+        return paymentRepository.findById(tenantId, new PaymentId(paymentId))
+                .orElseThrow(() -> new IllegalArgumentException("Payment not found"));
+    }
+
     private void applyCallback(Payment payment, Order order, PaymentCallbackCommand command) {
         payment.updateRawCallback(command.getRawPayload());
         String callbackStatus = command.getStatus().trim().toUpperCase();

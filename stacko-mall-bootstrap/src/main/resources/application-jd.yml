@@ -26,6 +26,10 @@ stacko:
       jwt:
         secret: change-me
         ttl: PT2H
+        exclude-paths:
+          - /api/c/products
+          - /api/c/products/**
+          - /api/c/payments/callback
     bootstrap:
       enabled: true
       tenant-id: platform-root
