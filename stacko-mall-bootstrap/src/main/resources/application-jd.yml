@@ -30,6 +30,7 @@ stacko:
           - /api/c/products
           - /api/c/products/**
           - /api/c/payments/callback
+          - /api/c/stocks/**
     bootstrap:
       enabled: true
       tenant-id: platform-root
