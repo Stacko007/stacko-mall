@@ -100,7 +100,7 @@
         </plugins>
     </build>
     <repositories>
-        <repository>
+        <!--<repository>
             <id>github</id>
             <url>https://maven.pkg.github.com/stacko007/stacko-user</url>
             <releases>
@@ -109,6 +109,10 @@
             <snapshots>
                 <enabled>true</enabled>
             </snapshots>
+        </repository>-->
+        <repository>
+            <id>nexus</id>
+            <url>http://117.72.247.17:8081/repository/maven-public/</url>
         </repository>
         <repository>
             <id>nexus-aliyun</id>
