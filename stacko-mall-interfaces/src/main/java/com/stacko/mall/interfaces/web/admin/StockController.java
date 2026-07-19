@@ -2,13 +2,14 @@ package com.stacko.mall.interfaces.web.admin;
 
 import com.stacko.mall.application.command.AdjustStockCommand;
 import com.stacko.mall.application.command.SetStockCommand;
+import com.stacko.mall.application.result.StockListItem;
 import com.stacko.mall.application.service.StockApplicationService;
 import com.stacko.mall.domain.model.Stock;
 import com.stacko.mall.interfaces.web.dto.StockAdjustRequest;
 import com.stacko.mall.interfaces.web.dto.StockSetRequest;
 import com.stacko.mall.interfaces.web.view.StockResponse;
-import com.stacko.user.contract.security.RequiresPermission;
-import com.stacko.user.contract.ApiResponse;
+import com.stacko.mall.interfaces.web.security.RequiresPermission;
+import com.stacko.mall.interfaces.web.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -70,8 +71,12 @@ public class StockController {
     @RequiresPermission("mall:stock:list")
     public ApiResponse<List<StockResponse>> list(@RequestHeader("X-Tenant-ID") String tenantId) {
         List<StockResponse> responses = stockApplicationService.list(tenantId).stream()
-                .map(StockResponse::from)
+                .map(this::toResponse)
                 .toList();
         return ApiResponse.ok(responses);
+    }
+
+    private StockResponse toResponse(StockListItem item) {
+        return StockResponse.from(item.stock(), item.productName());
     }
 }

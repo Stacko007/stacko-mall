@@ -5,7 +5,7 @@ import com.stacko.mall.application.service.AfterSalesApplicationService;
 import com.stacko.mall.domain.model.AfterSales;
 import com.stacko.mall.interfaces.web.dto.AfterSalesApplyRequest;
 import com.stacko.mall.interfaces.web.view.AfterSalesResponse;
-import com.stacko.user.contract.ApiResponse;
+import com.stacko.mall.interfaces.web.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.GetMapping;

@@ -30,8 +30,7 @@ export default function Cart() {
   const refresh = (next: CartItem[]) => setItems([...next]);
 
   const handleSubmit = async () => {
-    const buyerId = session.getBuyerId();
-    if (!buyerId) {
+    if (!session.getToken()) {
       message.warning('请先登录再下单');
       return;
     }
@@ -42,7 +41,6 @@ export default function Cart() {
     try {
       const resp = await api.createOrder(
         {
-          buyerId,
           items: selectedItems.map((item) => ({
             productId: item.productId,
             productName: item.name,
@@ -50,7 +48,7 @@ export default function Cart() {
             quantity: item.quantity
           }))
         },
-        createIdempotencyKey(`ORDER_CREATE:${buyerId}`)
+        createIdempotencyKey('ORDER_CREATE')
       );
       if (resp.data.success) {
         message.success('订单创建成功');

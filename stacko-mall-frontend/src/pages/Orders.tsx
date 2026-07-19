@@ -1,5 +1,5 @@
 import { Button, Card, List, Space, Tag, Tabs, Typography, message } from 'antd';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api, Order } from '../services/api';
 import { session } from '../store/session';
@@ -24,21 +24,15 @@ export default function Orders() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [status, setStatus] = useState('ALL');
   const [error, setError] = useState<string | null>(null);
-  const warnedRef = useRef(false);
 
   const load = async () => {
-    const buyerId = session.getBuyerId();
-    if (!buyerId) {
-      if (!warnedRef.current) {
-        message.warning('请先登录获取订单列表');
-        warnedRef.current = true;
-      }
+    if (!session.getToken()) {
+      message.warning('请先登录获取订单列表');
       setOrders([]);
       return;
     }
-    warnedRef.current = false;
     try {
-      const resp = await api.listOrders(buyerId);
+      const resp = await api.listOrders();
       if (resp.data.success) {
         setOrders(resp.data.data || []);
       } else {

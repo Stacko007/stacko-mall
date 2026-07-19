@@ -39,4 +39,5 @@ build/
 logs
 
 stacko-mall-admin-frontend/node_modules/*
+stacko-mall-admin-frontend/dist/*
 stacko-mall-frontend/node_modules/*

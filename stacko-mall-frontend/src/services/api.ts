@@ -71,7 +71,7 @@ export type Order = {
 };
 
 export type OrderCreateRequest = {
-  buyerId: string;
+  buyerId?: string;
   items: Array<{
     productId: string;
     productName: string;
@@ -111,8 +111,7 @@ export const api = {
       }
     }),
 
-  listOrders: (buyerId: string) =>
-    http.get<ApiResponse<Order[]>>('/c/orders', { params: { buyerId } }),
+  listOrders: () => http.get<ApiResponse<Order[]>>('/c/orders'),
 
   getOrder: (id: string) => http.get<ApiResponse<Order>>(`/c/orders/${id}`),
 

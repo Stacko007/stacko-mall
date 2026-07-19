@@ -6,8 +6,8 @@ import com.stacko.mall.application.command.UpdateProductCommand;
 import com.stacko.mall.domain.model.Product;
 import com.stacko.mall.interfaces.web.dto.ProductCreateRequest;
 import com.stacko.mall.interfaces.web.view.ProductResponse;
-import com.stacko.user.contract.security.RequiresPermission;
-import com.stacko.user.contract.ApiResponse;
+import com.stacko.mall.interfaces.web.security.RequiresPermission;
+import com.stacko.mall.interfaces.web.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 

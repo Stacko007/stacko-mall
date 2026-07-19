@@ -4,7 +4,7 @@ import com.stacko.mall.application.command.PaymentCallbackCommand;
 import com.stacko.mall.application.service.PaymentApplicationService;
 import com.stacko.mall.domain.model.Payment;
 import com.stacko.mall.interfaces.web.dto.PaymentCallbackRequest;
-import com.stacko.user.contract.ApiResponse;
+import com.stacko.mall.interfaces.web.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.PostMapping;

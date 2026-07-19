@@ -2,19 +2,31 @@ package com.stacko.mall.application.service;
 
 import com.stacko.mall.application.command.AdjustStockCommand;
 import com.stacko.mall.application.command.SetStockCommand;
+import com.stacko.mall.application.result.StockListItem;
+import com.stacko.mall.domain.model.Product;
 import com.stacko.mall.domain.model.ProductId;
 import com.stacko.mall.domain.model.Stock;
+import com.stacko.mall.domain.repository.ProductRepository;
 import com.stacko.mall.domain.repository.StockRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class StockApplicationService {
     private final StockRepository stockRepository;
+    private final ProductRepository productRepository;
 
-    public StockApplicationService(StockRepository stockRepository) {
+    public StockApplicationService(StockRepository stockRepository,
+                                   ProductRepository productRepository) {
         this.stockRepository = stockRepository;
+        this.productRepository = productRepository;
     }
 
     public Stock set(SetStockCommand command) {
@@ -45,7 +57,27 @@ public class StockApplicationService {
                 .orElseThrow(() -> new IllegalArgumentException("Stock not found"));
     }
 
-    public List<Stock> list(String tenantId) {
-        return stockRepository.listByTenant(tenantId);
+    @Transactional
+    public List<StockListItem> list(String tenantId) {
+        List<Stock> stocks = new ArrayList<>(stockRepository.listByTenant(tenantId));
+        Set<ProductId> stockedProductIds = new HashSet<>();
+        stocks.forEach(stock -> stockedProductIds.add(stock.getProductId()));
+
+        List<Product> products = productRepository.listByTenant(tenantId);
+        for (Product product : products) {
+            if (stockedProductIds.add(product.getId())) {
+                Stock stock = Stock.create(tenantId, product.getId(), 0);
+                stocks.add(stockRepository.save(stock));
+            }
+        }
+
+        Map<String, String> productNames = products.stream()
+                .collect(Collectors.toMap(product -> product.getId().value(), Product::getName));
+        return stocks.stream()
+                .map(stock -> new StockListItem(
+                        stock,
+                        productNames.get(stock.getProductId().value())
+                ))
+                .toList();
     }
 }

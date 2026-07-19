@@ -39,8 +39,7 @@ export default function ConfirmOrder() {
   const total = (product?.price || 0) * quantity;
 
   const handleSubmit = async () => {
-    const buyerId = session.getBuyerId();
-    if (!buyerId) {
+    if (!session.getToken()) {
       message.warning('请先登录');
       navigate('/login');
       return;
@@ -52,7 +51,6 @@ export default function ConfirmOrder() {
     try {
       const resp = await api.createOrder(
         {
-          buyerId,
           items: [
             {
               productId: product.id,
@@ -62,7 +60,7 @@ export default function ConfirmOrder() {
             }
           ]
         },
-        createIdempotencyKey(`ORDER_CREATE:${buyerId}`)
+        createIdempotencyKey('ORDER_CREATE')
       );
       if (resp.data.success) {
         message.success('订单创建成功');

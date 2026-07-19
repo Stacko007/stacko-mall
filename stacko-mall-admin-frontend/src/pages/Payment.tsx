@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { api, Order } from '../services/api';
 import { createIdempotencyKey } from '../utils/idempotency';
-import { getErrorMessage } from '../utils/error';
 
 const { Title, Paragraph } = Typography;
 

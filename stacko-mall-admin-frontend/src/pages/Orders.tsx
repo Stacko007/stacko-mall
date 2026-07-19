@@ -7,6 +7,7 @@ import {
   Space,
   Table,
   Tag,
+  Tooltip,
   Typography,
   message
 } from 'antd';
@@ -14,15 +15,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { adminApi, Order, OrderStatus } from '../services/api';
 import { formatDateTime } from '../utils/format';
-
-const statusColor: Record<OrderStatus, string> = {
-  CREATED: 'default',
-  PAID: 'blue',
-  SHIPPED: 'geekblue',
-  COMPLETED: 'green',
-  CANCELLED: 'orange',
-  CLOSED: 'volcano'
-};
+import { orderStatusColors, orderStatusLabels } from '../utils/orderStatus';
 
 type ShipFormValues = {
   carrier: string;
@@ -106,16 +99,24 @@ export default function Orders() {
         render: (value: string) => <Typography.Text code>{value}</Typography.Text>
       },
       {
-        title: '买家ID',
-        dataIndex: 'buyerId',
-        width: 140
+        title: '买家',
+        dataIndex: 'buyerName',
+        width: 180,
+        render: (value: string | undefined, record: Order) => (
+          <Space direction="vertical" size={0}>
+            <Typography.Text>{value || '-'}</Typography.Text>
+            <Typography.Text type="secondary">{record.buyerId}</Typography.Text>
+          </Space>
+        )
       },
       {
         title: '状态',
         dataIndex: 'status',
         width: 120,
         render: (value: OrderStatus) => (
-          <Tag color={statusColor[value] || 'default'}>{value}</Tag>
+          <Tag color={orderStatusColors[value] || 'default'}>
+            {orderStatusLabels[value] || value}
+          </Tag>
         )
       },
       {
@@ -139,13 +140,17 @@ export default function Orders() {
             <Button type="link" onClick={() => navigate(`/admin/orders/${record.id}`)}>
               详情
             </Button>
-            <Button
-              type="link"
-              disabled={record.status !== 'PAID'}
-              onClick={() => openShip(record)}
-            >
-              发货
-            </Button>
+            <Tooltip title={record.status !== 'PAID' ? '订单支付后才能发货' : undefined}>
+              <span>
+                <Button
+                  type="link"
+                  disabled={record.status !== 'PAID'}
+                  onClick={() => openShip(record)}
+                >
+                  发货
+                </Button>
+              </span>
+            </Tooltip>
             <Button
               type="link"
               danger

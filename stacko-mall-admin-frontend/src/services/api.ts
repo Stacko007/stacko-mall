@@ -1,4 +1,5 @@
 import http from './http';
+import { createIdempotencyKey } from '../utils/idempotency';
 
 export type ApiResponse<T> = {
   success: boolean;
@@ -37,6 +38,7 @@ export type Product = {
 
 export type Stock = {
   productId: string;
+  productName?: string;
   quantity: number;
   updatedAt?: string;
 };
@@ -57,9 +59,20 @@ export type OrderItem = {
   amount?: number;
 };
 
+export type OrderCreateRequest = {
+  buyerId?: string;
+  items: Array<{
+    productId: string;
+    productName: string;
+    price: number;
+    quantity: number;
+  }>;
+};
+
 export type Order = {
   id: string;
   buyerId: string;
+  buyerName?: string;
   status: OrderStatus;
   totalAmount: number;
   shippingCarrier?: string | null;
@@ -73,6 +86,15 @@ export type Order = {
 
 export type PaymentStatus = 'CREATED' | 'PAID' | 'FAILED' | 'REFUNDED';
 export type PaymentChannel = 'MOCK' | 'ALIPAY' | 'WECHAT';
+
+export type PaymentCallbackRequest = {
+  callbackId: string;
+  orderId: string;
+  tradeNo: string;
+  status: 'PAID' | 'FAILED';
+  signature: string;
+  rawPayload?: string;
+};
 
 export type Payment = {
   id: string;
@@ -151,9 +173,51 @@ export const adminApi = {
     http.get<ApiResponse<Payment>>(`/admin/payments/${id}`),
 
   getAfterSales: (id: string) =>
-    http.get<ApiResponse<AfterSales>>(`/c/after-sales/${id}`),
+    http.get<ApiResponse<AfterSales>>(`/admin/after-sales/${id}`),
   reviewAfterSales: (id: string, payload: { approved: boolean; remark?: string }) =>
     http.post<ApiResponse<AfterSales>>(`/admin/after-sales/${id}/review`, payload),
   refundAfterSales: (id: string, payload: { remark?: string }) =>
     http.post<ApiResponse<AfterSales>>(`/admin/after-sales/${id}/refund`, payload)
+};
+
+export const api = {
+  login: (payload: LoginRequest) =>
+    http.post<ApiResponse<AuthToken>>('/auth/login', payload),
+
+  getProducts: () => http.get<ApiResponse<Product[]>>('/c/products'),
+
+  getProduct: (id: string) => http.get<ApiResponse<Product>>(`/c/products/${id}`),
+
+  getStock: (productId: string) =>
+    http.get<ApiResponse<Stock>>(`/c/stocks/${productId}`),
+
+  createOrder: (payload: OrderCreateRequest, idempotencyKey?: string) =>
+    http.post<ApiResponse<Order>>('/c/orders', payload, {
+      headers: {
+        'X-Idempotency-Key':
+          idempotencyKey || createIdempotencyKey('ORDER_CREATE')
+      }
+    }),
+
+  listOrders: () => http.get<ApiResponse<Order[]>>('/c/orders'),
+
+  getOrder: (id: string) => http.get<ApiResponse<Order>>(`/c/orders/${id}`),
+
+  payOrder: (id: string, idempotencyKey?: string) =>
+    http.post<ApiResponse<Order>>(`/c/orders/${id}/pay`, null, {
+      headers: {
+        'X-Idempotency-Key': idempotencyKey || createIdempotencyKey(`PAY:${id}`)
+      }
+    }),
+
+  cancelOrder: (id: string, idempotencyKey?: string) =>
+    http.post<ApiResponse<Order>>(`/c/orders/${id}/cancel`, null, {
+      headers: {
+        'X-Idempotency-Key':
+          idempotencyKey || createIdempotencyKey(`CANCEL:${id}`)
+      }
+    }),
+
+  paymentCallback: (payload: PaymentCallbackRequest) =>
+    http.post<ApiResponse<string>>('/c/payments/callback', payload)
 };

@@ -7,12 +7,13 @@ import com.stacko.mall.domain.model.AfterSales;
 import com.stacko.mall.interfaces.web.dto.AfterSalesRefundRequest;
 import com.stacko.mall.interfaces.web.dto.AfterSalesReviewRequest;
 import com.stacko.mall.interfaces.web.view.AfterSalesResponse;
-import com.stacko.user.contract.ApiResponse;
-import com.stacko.user.contract.security.RequiresPermission;
+import com.stacko.mall.interfaces.web.ApiResponse;
+import com.stacko.mall.interfaces.web.security.RequiresPermission;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -29,6 +30,14 @@ public class AfterSalesController {
 
     public AfterSalesController(AfterSalesApplicationService afterSalesApplicationService) {
         this.afterSalesApplicationService = afterSalesApplicationService;
+    }
+
+    @GetMapping("/{id}")
+    @RequiresPermission("mall:afterSales:read")
+    public ApiResponse<AfterSalesResponse> get(@RequestHeader("X-Tenant-ID") @NotBlank String tenantId,
+                                               @PathVariable("id") @NotBlank String id) {
+        AfterSales afterSales = afterSalesApplicationService.get(tenantId, id);
+        return ApiResponse.ok(AfterSalesResponse.from(afterSales));
     }
 
     @PostMapping("/{id}/review")

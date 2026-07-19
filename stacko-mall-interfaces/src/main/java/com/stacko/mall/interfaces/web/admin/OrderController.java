@@ -2,12 +2,13 @@ package com.stacko.mall.interfaces.web.admin;
 
 import com.stacko.mall.application.command.CloseOrderCommand;
 import com.stacko.mall.application.command.ShipOrderCommand;
+import com.stacko.mall.application.service.MemberApplicationService;
 import com.stacko.mall.application.service.OrderApplicationService;
 import com.stacko.mall.domain.model.Order;
 import com.stacko.mall.interfaces.web.dto.OrderShipRequest;
 import com.stacko.mall.interfaces.web.view.OrderResponse;
-import com.stacko.user.contract.security.RequiresPermission;
-import com.stacko.user.contract.ApiResponse;
+import com.stacko.mall.interfaces.web.security.RequiresPermission;
+import com.stacko.mall.interfaces.web.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.validation.annotation.Validated;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController("adminOrderController")
 @RequestMapping("/api/admin/orders")
@@ -29,9 +31,12 @@ import java.util.List;
 @Tag(name = "商城-管理端", description = "订单管理接口")
 public class OrderController {
     private final OrderApplicationService orderApplicationService;
+    private final MemberApplicationService memberApplicationService;
 
-    public OrderController(OrderApplicationService orderApplicationService) {
+    public OrderController(OrderApplicationService orderApplicationService,
+                           MemberApplicationService memberApplicationService) {
         this.orderApplicationService = orderApplicationService;
+        this.memberApplicationService = memberApplicationService;
     }
 
     @GetMapping
@@ -41,7 +46,10 @@ public class OrderController {
         List<Order> orders = buyerId == null || buyerId.isBlank()
                 ? orderApplicationService.listForTenant(tenantId)
                 : orderApplicationService.listForBuyer(tenantId, buyerId);
-        List<OrderResponse> responses = orders.stream().map(OrderResponse::from).toList();
+        Map<String, String> buyerNames = memberApplicationService.getBuyerNames(tenantId);
+        List<OrderResponse> responses = orders.stream()
+                .map(order -> OrderResponse.from(order, buyerNames.get(order.getBuyerId())))
+                .toList();
         return ApiResponse.ok(responses);
     }
 
@@ -50,7 +58,8 @@ public class OrderController {
     public ApiResponse<OrderResponse> get(@RequestHeader("X-Tenant-ID") @NotBlank String tenantId,
                                           @PathVariable("id") @NotBlank String id) {
         Order order = orderApplicationService.get(tenantId, id);
-        return ApiResponse.ok(OrderResponse.from(order));
+        String buyerName = memberApplicationService.getBuyerNames(tenantId).get(order.getBuyerId());
+        return ApiResponse.ok(OrderResponse.from(order, buyerName));
     }
 
     @PostMapping("/{id}/ship")

@@ -3,7 +3,7 @@ package com.stacko.mall.interfaces.web.c;
 import com.stacko.mall.application.service.StockApplicationService;
 import com.stacko.mall.domain.model.Stock;
 import com.stacko.mall.interfaces.web.view.StockResponse;
-import com.stacko.user.contract.ApiResponse;
+import com.stacko.mall.interfaces.web.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;

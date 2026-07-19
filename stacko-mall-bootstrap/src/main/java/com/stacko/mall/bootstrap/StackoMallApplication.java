@@ -5,7 +5,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
-@SpringBootApplication(scanBasePackages = {"com.stacko.mall", "com.stacko.user"})
+@SpringBootApplication(scanBasePackages = "com.stacko.mall")
 @MapperScan("com.stacko.mall.infra.dao")
 @EnableScheduling
 public class StackoMallApplication {

@@ -69,7 +69,6 @@ INSERT INTO `up_permissions` ( `code`, `name`, `tenant_id`) VALUES ( 'user:reset
 INSERT INTO `up_permissions` ( `code`, `name`, `tenant_id`) VALUES ( 'user:delete', '删除用户', 'platform-root');
 INSERT INTO `up_permissions` ( `code`, `name`, `tenant_id`) VALUES ( 'auth:kick', '踢出用户', 'platform-root');
 INSERT INTO `up_permissions` ( `code`, `name`, `tenant_id`) VALUES ( 'auth:ban', '封禁用户', 'platform-root');
-INSERT INTO `up_permissions` ( `code`, `name`, `tenant_id`) VALUES ( 'acl:check', '权限检查', 'platform-root');
 INSERT INTO `up_permissions` ( `code`, `name`, `tenant_id`) VALUES ( 'platform:tenant:create', '创建租户', 'platform-root');
 INSERT INTO `up_permissions` ( `code`, `name`, `tenant_id`) VALUES ( 'platform:tenant:list', '查询租户', 'platform-root');
 INSERT INTO `up_permissions` ( `code`, `name`, `tenant_id`) VALUES ( 'platform:tenant:update', '更新租户', 'platform-root');
@@ -91,7 +90,6 @@ INSERT INTO `up_permissions` ( `code`, `name`, `tenant_id`) VALUES ( 'user:reset
 INSERT INTO `up_permissions` ( `code`, `name`, `tenant_id`) VALUES ( 'user:delete', '删除用户', 'stacko-mall');
 INSERT INTO `up_permissions` ( `code`, `name`, `tenant_id`) VALUES ( 'auth:kick', '踢出用户', 'stacko-mall');
 INSERT INTO `up_permissions` ( `code`, `name`, `tenant_id`) VALUES ( 'auth:ban', '封禁用户', 'stacko-mall');
-INSERT INTO `up_permissions` ( `code`, `name`, `tenant_id`) VALUES ( 'acl:check', '权限检查', 'stacko-mall');
 INSERT INTO `up_permissions` ( `code`, `name`, `tenant_id`) VALUES ( 'mall:order:create', '创建订单', 'stacko-mall');
 INSERT INTO `up_permissions` ( `code`, `name`, `tenant_id`) VALUES ( 'mall:order:list', '查询订单', 'stacko-mall');
 INSERT INTO `up_permissions` ( `code`, `name`, `tenant_id`) VALUES ( 'mall:order:edit', '修改订单', 'stacko-mall');
@@ -128,7 +126,6 @@ INSERT INTO `up_role_permissions` (`role_code`, `tenant_id`, `permission_code`) 
 INSERT INTO `up_role_permissions` (`role_code`, `tenant_id`, `permission_code`) VALUES ('tenant-admin', 'platform-root', 'user:create');
 INSERT INTO `up_role_permissions` (`role_code`, `tenant_id`, `permission_code`) VALUES ('tenant-admin', 'platform-root', 'rbac:role:grant');
 INSERT INTO `up_role_permissions` (`role_code`, `tenant_id`, `permission_code`) VALUES ('tenant-admin', 'platform-root', 'user:read');
-INSERT INTO `up_role_permissions` (`role_code`, `tenant_id`, `permission_code`) VALUES ('tenant-admin', 'platform-root', 'acl:check');
 INSERT INTO `up_role_permissions` (`role_code`, `tenant_id`, `permission_code`) VALUES ('tenant-admin', 'platform-root', 'rbac:permission:list');
 INSERT INTO `up_role_permissions` (`role_code`, `tenant_id`, `permission_code`) VALUES ('tenant-admin', 'platform-root', 'rbac:role:delete');
 INSERT INTO `up_role_permissions` (`role_code`, `tenant_id`, `permission_code`) VALUES ('tenant-admin', 'platform-root', 'rbac:permission:create');
@@ -147,7 +144,6 @@ INSERT INTO `up_role_permissions` (`role_code`, `tenant_id`, `permission_code`) 
 INSERT INTO `up_role_permissions` (`role_code`, `tenant_id`, `permission_code`) VALUES ('tenant-admin', 'stacko-mall', 'user:create');
 INSERT INTO `up_role_permissions` (`role_code`, `tenant_id`, `permission_code`) VALUES ('tenant-admin', 'stacko-mall', 'rbac:role:grant');
 INSERT INTO `up_role_permissions` (`role_code`, `tenant_id`, `permission_code`) VALUES ('tenant-admin', 'stacko-mall', 'user:read');
-INSERT INTO `up_role_permissions` (`role_code`, `tenant_id`, `permission_code`) VALUES ('tenant-admin', 'stacko-mall', 'acl:check');
 INSERT INTO `up_role_permissions` (`role_code`, `tenant_id`, `permission_code`) VALUES ('tenant-admin', 'stacko-mall', 'rbac:permission:list');
 INSERT INTO `up_role_permissions` (`role_code`, `tenant_id`, `permission_code`) VALUES ('tenant-admin', 'stacko-mall', 'rbac:role:delete');
 INSERT INTO `up_role_permissions` (`role_code`, `tenant_id`, `permission_code`) VALUES ('tenant-admin', 'stacko-mall', 'rbac:permission:create');

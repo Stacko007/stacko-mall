@@ -63,8 +63,7 @@
             "mall:product:read",
             "mall:order:list",
             "mall:cart:addproduct",
-            "mall:product:update",
-            "acl:check"
+            "mall:product:update"
         ]
     }
 }

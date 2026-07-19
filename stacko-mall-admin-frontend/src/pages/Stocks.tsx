@@ -90,9 +90,16 @@ export default function Stocks() {
   const columns = useMemo(
     () => [
       {
+        title: '商品名称',
+        dataIndex: 'productName',
+        width: 220,
+        ellipsis: true,
+        render: (value?: string) => value || '-'
+      },
+      {
         title: '商品ID',
         dataIndex: 'productId',
-        width: 220,
+        width: 260,
         render: (value: string) => <Text code>{value}</Text>
       },
       {
@@ -126,13 +133,21 @@ export default function Stocks() {
   );
 
   return (
-    <Card title="库存管理" className="card-shadow">
+    <Card
+      title="库存管理"
+      className="card-shadow"
+      extra={
+        <Button loading={loading} onClick={fetchStocks}>
+          刷新列表
+        </Button>
+      }
+    >
       <Table
         rowKey="productId"
         columns={columns}
         dataSource={stocks}
         loading={loading}
-        scroll={{ x: 760 }}
+        scroll={{ x: 980 }}
       />
 
       <Modal

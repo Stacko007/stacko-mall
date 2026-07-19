@@ -1,13 +1,22 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
+declare const process: {
+  env: Record<string, string | undefined>;
+};
+
 export default defineConfig({
   plugins: [react()],
   server: {
-    port: 5173,
+    port: 5174,
     proxy: {
+      '/api/auth': {
+        target: process.env.VITE_USER_CENTER_TARGET || 'http://localhost:8080',
+        changeOrigin: true,
+        secure: false
+      },
       '/api': {
-        target: 'http://127.0.0.1:8080',
+        target: process.env.VITE_PROXY_TARGET || 'http://localhost:8081',
         changeOrigin: true,
         secure: false
       }

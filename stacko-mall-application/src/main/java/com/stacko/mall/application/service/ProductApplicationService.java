@@ -4,19 +4,26 @@ import com.stacko.mall.application.command.CreateProductCommand;
 import com.stacko.mall.application.command.UpdateProductCommand;
 import com.stacko.mall.domain.model.Product;
 import com.stacko.mall.domain.model.ProductId;
+import com.stacko.mall.domain.model.Stock;
 import com.stacko.mall.domain.repository.ProductRepository;
+import com.stacko.mall.domain.repository.StockRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
 public class ProductApplicationService {
     private final ProductRepository productRepository;
+    private final StockRepository stockRepository;
 
-    public ProductApplicationService(ProductRepository productRepository) {
+    public ProductApplicationService(ProductRepository productRepository,
+                                     StockRepository stockRepository) {
         this.productRepository = productRepository;
+        this.stockRepository = stockRepository;
     }
 
+    @Transactional
     public Product create(CreateProductCommand command) {
         Product product = Product.create(
                 command.getTenantId(),
@@ -24,7 +31,9 @@ public class ProductApplicationService {
                 command.getDescription(),
                 command.getPrice()
         );
-        return productRepository.save(product);
+        Product saved = productRepository.save(product);
+        stockRepository.save(Stock.create(command.getTenantId(), saved.getId(), 0));
+        return saved;
     }
 
     public Product update(UpdateProductCommand command) {

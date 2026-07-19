@@ -10,6 +10,7 @@ import java.util.List;
 public class OrderResponse {
     private String id;
     private String buyerId;
+    private String buyerName;
     private OrderStatus status;
     private BigDecimal totalAmount;
     private String shippingCarrier;
@@ -36,6 +37,12 @@ public class OrderResponse {
         return response;
     }
 
+    public static OrderResponse from(Order order, String buyerName) {
+        OrderResponse response = from(order);
+        response.setBuyerName(buyerName);
+        return response;
+    }
+
     public String getId() {
         return id;
     }
@@ -50,6 +57,14 @@ public class OrderResponse {
 
     public void setBuyerId(String buyerId) {
         this.buyerId = buyerId;
+    }
+
+    public String getBuyerName() {
+        return buyerName;
+    }
+
+    public void setBuyerName(String buyerName) {
+        this.buyerName = buyerName;
     }
 
     public OrderStatus getStatus() {

@@ -7,22 +7,15 @@ import {
   Space,
   Table,
   Tag,
+  Tooltip,
   Typography,
   message
 } from 'antd';
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { adminApi, Order, OrderStatus } from '../services/api';
+import { adminApi, Order } from '../services/api';
 import { formatDateTime } from '../utils/format';
-
-const statusColor: Record<OrderStatus, string> = {
-  CREATED: 'default',
-  PAID: 'blue',
-  SHIPPED: 'geekblue',
-  COMPLETED: 'green',
-  CANCELLED: 'orange',
-  CLOSED: 'volcano'
-};
+import { orderStatusColors, orderStatusLabels } from '../utils/orderStatus';
 
 type ShipFormValues = {
   carrier: string;
@@ -133,13 +126,19 @@ export default function OrderDetail() {
       extra={
         <Space>
           <Button onClick={() => navigate(-1)}>返回</Button>
-          <Button
-            type="primary"
-            disabled={!order || order.status !== 'PAID'}
-            onClick={openShip}
+          <Tooltip
+            title={order && order.status !== 'PAID' ? '订单支付后才能发货' : undefined}
           >
-            发货
-          </Button>
+            <span>
+              <Button
+                type="primary"
+                disabled={!order || order.status !== 'PAID'}
+                onClick={openShip}
+              >
+                发货
+              </Button>
+            </span>
+          </Tooltip>
           <Button
             danger
             disabled={!order || !['CREATED', 'PAID'].includes(order.status)}
@@ -156,9 +155,14 @@ export default function OrderDetail() {
             <Descriptions.Item label="订单ID">
               <Typography.Text code>{order.id}</Typography.Text>
             </Descriptions.Item>
+            <Descriptions.Item label="买家名称">
+              {order.buyerName || '-'}
+            </Descriptions.Item>
             <Descriptions.Item label="买家ID">{order.buyerId}</Descriptions.Item>
             <Descriptions.Item label="状态">
-              <Tag color={statusColor[order.status]}>{order.status}</Tag>
+              <Tag color={orderStatusColors[order.status]}>
+                {orderStatusLabels[order.status] || order.status}
+              </Tag>
             </Descriptions.Item>
             <Descriptions.Item label="订单金额">
               ¥{Number(order.totalAmount).toFixed(2)}
