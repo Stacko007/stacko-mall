@@ -12,10 +12,10 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 @Aspect
 @Component
 public class PermissionAspect {
-    private final UserCenterAclClient userCenterAclClient;
+    private final PermissionChecker permissionChecker;
 
-    public PermissionAspect(UserCenterAclClient userCenterAclClient) {
-        this.userCenterAclClient = userCenterAclClient;
+    public PermissionAspect(PermissionChecker permissionChecker) {
+        this.permissionChecker = permissionChecker;
     }
 
     @Around("@annotation(required)")
@@ -27,9 +27,7 @@ public class PermissionAspect {
         HttpServletRequest request = attrs.getRequest();
         String tenantId = request.getHeader("X-Tenant-ID");
         String authorization = request.getHeader(HttpHeaders.AUTHORIZATION);
-        if (!userCenterAclClient.hasPermission(tenantId, authorization, required.value())) {
-            throw new SecurityException("Forbidden");
-        }
+        permissionChecker.checkPermission(tenantId, authorization, required.value());
         return pjp.proceed();
     }
 }

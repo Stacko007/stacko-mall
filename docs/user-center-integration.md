@@ -2,7 +2,11 @@
 
 ## 当前方向
 
-`stacko-mall` 不再嵌入 `stacko-user-starter` 或 `stacko-user-interfaces`。商城作为独立业务应用运行，只通过用户中心 HTTP API 完成鉴权和权限校验。
+`stacko-mall` 不再嵌入 `stacko-user-starter` 或 `stacko-user-interfaces`。商城作为独立业务应用运行，用户和 RBAC 主数据仍由用户中心维护。
+
+用户中心已统一签发 Sa-Token。商城 C 端身份和管理端权限均通过认证 Redis 本地读取 SaSession，正常业务请求不再逐请求调用 `/api/auth/current` 或 `/api/acl/check`。
+
+完整迁移阶段和验收记录见 `stacko-user/docs/sa-token-distributed-auth-refactor-plan.md`。认证迁移已经收口，商城后端不再保留远程鉴权回退链路。
 
 ## 已调整内容
 
@@ -11,47 +15,44 @@
 - `stacko-mall-interfaces` 去掉 `stacko-user-contract`、`stacko-user-shared-web` 依赖。
 - 商城侧新增本地 `ApiResponse`，避免 API 响应结构依赖用户中心代码包。
 - 商城侧新增本地 `RequiresPermission`，管理端 controller 继续用注解表达业务权限。
-- 商城侧新增 `UserCenterAclClient`，通过 `/api/acl/check` 调用户中心校验权限。
+- 商城侧身份和权限只使用共享 Redis 中的 Sa-Token Session。
 
-## 用户中心配置
+## 认证配置
 
-```yaml
-mall:
-  user-center:
-    enabled: true
-    base-url: http://localhost:8080
-    acl-check-path: /api/acl/check
-    current-user-path: /api/auth/current
-```
+商城后端不再需要 `mall.user-center.*` 配置。用户中心与商城必须连接同一个认证 Redis，并统一使用：
 
-`base-url` 指向 `stacko-user-bootstrap` 的服务地址。
-
-`enabled=false` 不会放行管理端权限，而是直接拒绝权限校验，避免误配置导致管理端绕过用户中心。
+- Sa-Token 账号体系：固定为 `stacko-user`
+- Token Header：`Authorization`
+- Token 前缀：`Bearer`
+- Sa-Token Redis DAO：`sa-token-redis-jackson`
 
 ## 本地联调启动
 
 当前联调端口约定：
 
+- Gateway：`http://localhost:8088`
 - 用户中心后端：`http://localhost:8080`
 - 商城后端：`http://localhost:8081`
 - 商城 C 端前端：`http://localhost:5173`
 - 商城后台前端：`http://localhost:5174`
 - 用户中心管理前端：`http://localhost:5175`
 
-商城两个前端的 Vite 代理规则：
+三个前端统一通过 Gateway 访问后端。Vite 只代理以下两个前缀到 `http://localhost:8088`：
 
-- `/api/auth/**` 转发到用户中心后端。
-- 其他 `/api/**` 转发到商城后端。
+- `/user/api/**` 由 Gateway 路由到用户中心。
+- `/mall/api/**` 由 Gateway 路由到商城。
 
-这样登录、注册、刷新 token 由用户中心处理，商品、订单等业务接口由商城处理。
+登录、注册等认证请求使用 `/user/api/**`，商品、订单等业务请求使用 `/mall/api/**`。Nacos 只负责服务注册与发现，不会自动改写浏览器请求；前端不能再直接代理到 `8080` 或 `8081`。
 
-本次联调用户中心使用 memory 模式启动，演示账号为：
+本地默认 Gateway 地址为 `http://localhost:8088`，需要覆盖时在对应前端的 `.env.local` 中设置 `VITE_GATEWAY_TARGET`。`VITE_USER_API_BASE` 和 `VITE_MALL_API_BASE` 只用于部署路径确有差异时覆盖默认的 `/user/api`、`/mall/api`，日常本地联调不需要设置。
+
+当前联调用户中心使用 MySQL + MyBatis-Plus + Sa-Token + Redis，联调账号为：
 
 - 租户：`stacko-mall`
 - 用户名：`stacko001`
 - 密码：`123456`
 
-注意：memory 模式数据随进程停止丢失。当前演示账号可用于登录和 C 端当前用户解析；如需完整验证商城后台受保护接口，需要在用户中心为该账号补齐商城业务权限码。
+账号、租户和权限维护在用户中心 MySQL；会话保存在 Redis。验证商城后台接口前，需要在用户中心为账号分配对应商城业务权限码。
 
 ## 权限校验流程
 
@@ -59,13 +60,14 @@ mall:
 2. `PermissionAspect` 从当前请求读取：
    - `Authorization`
    - `X-Tenant-ID`
-3. `UserCenterAclClient` 透传 token 和租户，调用用户中心 `/api/acl/check`。
-4. 用户中心负责解析 token、校验租户一致性、判断权限码。
-5. 用户中心返回 `true` 才允许执行业务接口。
+3. `CurrentUserContext` 本地读取共享 Redis 中的 SaSession，并校验 token、状态和租户。
+4. `MallStpInterface` 向 Sa-Token提供当前 Session中的角色和权限，`LocalPermissionChecker` 通过 `StpLogic` 校验。
+5. `SaStrategy.hasElement` 保持完整权限码精确匹配，不启用 Sa-Token默认通配匹配。
+6. 匹配成功才允许执行业务接口；同一请求复用已经解析的当前用户。
 
-用户中心只使用 token 确认当前用户身份，权限判断会按用户 ID 实时读取数据库中的直接权限和角色权限。因此角色授权或撤权后不需要重新登录即可生效，已禁用用户也不能继续通过 ACL 校验。
+角色授权、撤权、角色权限修改、用户禁用等操作会在用户中心清理受影响的 SaSession，用户需要重新登录并获得最新权限快照。权限维护必须通过用户中心应用接口完成，不能直接修改数据库绕过会话失效逻辑。
 
-`/api/acl/check` 只要求有效登录态，并限制只能检查 token 所属用户在同一租户下的权限，不再要求额外的 `acl:check` 权限。
+用户中心 `/api/acl/check` 仍可供其他系统兼容或诊断，但商城已经删除对应客户端。
 
 历史数据库中若已存在 `acl:check`，它不会影响运行。确认没有其他系统依赖后，可选执行以下 SQL 清理：
 
@@ -101,10 +103,12 @@ DELETE FROM up_permissions WHERE code = 'acl:check';
 C 端订单接口不再信任请求体里的 `buyerId`：
 
 1. C 端请求携带 `Authorization` 和 `X-Tenant-ID`。
-2. 商城后端调用用户中心 `GET /api/auth/current`。
+2. 商城后端通过 `CurrentUserContext` 本地读取 Sa-Token Session；同一请求只解析一次，并由 `MallStpInterface` 复用该身份完成权限校验。
 3. 商城后端按用户中心返回的 `id` 查找或创建 `mall_member`。
 4. 商城后端使用 `mall_member.id` 作为订单 `buyerId`。
 5. 订单查询、支付、取消前都会校验订单 `buyerId` 等于当前会员 ID；历史订单兼容旧的用户中心 userId。
+
+本地身份解析会校验 Token 有效性、用户状态和租户一致性。Redis 不可用返回 503；无效 Token 返回 401；跨租户访问返回 403。
 
 `OrderCreateRequest.buyerId` 暂时保留为兼容字段，但后端忽略它。后续前端和接口文档稳定后可以删除。
 
@@ -142,8 +146,7 @@ CREATE TABLE mall_member (
 
 ## 后续待做
 
-1. 可增加 `CurrentUserContext`，统一提供当前 `tenantId/userId/memberId/permissions`，减少 controller 重复调用。
-2. 前端彻底移除历史 `buyerId` localStorage。
-3. 增加会员管理接口和管理端页面，维护昵称、等级、状态等商城业务字段。
-4. 根据实际部署环境配置 `mall.user-center.base-url`。
-5. 补充 smoke 测试：登录用户中心、调用商城管理端、缺权限返回 403、有权限返回业务数据。
+1. 前端彻底移除历史 `buyerId` localStorage。
+2. 增加会员管理接口和管理端页面，维护昵称、等级、状态等商城业务字段。
+3. 增加真实 Redis 联调 smoke 测试：登录用户中心、调用商城管理端、撤权后旧 Token 失效。
+4. 部署环境由负载均衡将 `/user/**` 和 `/mall/**` 统一转发到 Gateway 集群。

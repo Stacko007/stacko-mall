@@ -1,8 +1,21 @@
 server:
-  port: 8081
+  port: ${STACKO_MALL_PORT:8081}
 spring:
+  application:
+    name: stacko-mall
   profiles:
     active: jd
+  cloud:
+    nacos:
+      discovery:
+        enabled: ${STACKO_NACOS_ENABLED:true}
+        server-addr: ${STACKO_NACOS_SERVER_ADDR:127.0.0.1:8848}
+        namespace: ${STACKO_NACOS_NAMESPACE:}
+        group: ${STACKO_NACOS_GROUP:DEFAULT_GROUP}
+        username: ${STACKO_NACOS_USERNAME:nacos}
+        password: ${STACKO_NACOS_PASSWORD:nacos}
+        health-indicator:
+          enabled: ${STACKO_NACOS_HEALTH_INDICATOR_ENABLED:true}
 
 user:
   platform:
@@ -10,12 +23,18 @@ user:
       swagger-bypass: false
 
 sa-token:
-  token-name: satoken
+  token-name: Authorization
   token-prefix: Bearer
-  timeout: 7200
+  timeout: ${STACKO_AUTH_ACCESS_TTL_SECONDS:7200}
+  is-concurrent: false
+  is-share: false
   is-read-cookie: false
   is-read-body: false
   is-read-header: true
+  is-write-header: false
+  token-session-check-login: true
+  is-print: false
+  is-log: false
 
 
 
@@ -30,10 +49,12 @@ payment:
   mock:
     callback-secret: stacko-mall-callback-secret
 
-mall:
-  user-center:
-    enabled: true
-    base-url: http://localhost:8080
-    acl-check-path: /api/acl/check
-    current-user-path: /api/auth/current
-
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      probes:
+        enabled: true

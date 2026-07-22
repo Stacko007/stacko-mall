@@ -1,4 +1,4 @@
-import http from './http';
+import http, { userHttp } from './http';
 import { createIdempotencyKey } from '../utils/idempotency';
 
 export type ApiResponse<T> = {
@@ -131,7 +131,7 @@ export type AfterSales = {
 
 export const adminApi = {
   login: (payload: LoginRequest) =>
-    http.post<ApiResponse<AuthToken>>('/auth/login', payload),
+    userHttp.post<ApiResponse<AuthToken>>('/auth/login', payload),
 
   listProducts: () => http.get<ApiResponse<Product[]>>('/admin/products'),
   getProduct: (id: string) =>
@@ -182,7 +182,7 @@ export const adminApi = {
 
 export const api = {
   login: (payload: LoginRequest) =>
-    http.post<ApiResponse<AuthToken>>('/auth/login', payload),
+    userHttp.post<ApiResponse<AuthToken>>('/auth/login', payload),
 
   getProducts: () => http.get<ApiResponse<Product[]>>('/c/products'),
 

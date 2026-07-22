@@ -11,7 +11,7 @@ import com.stacko.mall.domain.model.Member;
 import com.stacko.mall.interfaces.web.dto.OrderCreateRequest;
 import com.stacko.mall.interfaces.web.dto.OrderItemRequest;
 import com.stacko.mall.interfaces.web.security.CurrentUser;
-import com.stacko.mall.interfaces.web.security.UserCenterCurrentUserClient;
+import com.stacko.mall.interfaces.web.security.CurrentUserContext;
 import com.stacko.mall.interfaces.web.view.OrderResponse;
 import com.stacko.mall.interfaces.web.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -37,14 +37,14 @@ import java.util.Map;
 public class OrderController {
     private final OrderApplicationService orderApplicationService;
     private final MemberApplicationService memberApplicationService;
-    private final UserCenterCurrentUserClient currentUserClient;
+    private final CurrentUserContext currentUserContext;
 
     public OrderController(OrderApplicationService orderApplicationService,
                            MemberApplicationService memberApplicationService,
-                           UserCenterCurrentUserClient currentUserClient) {
+                           CurrentUserContext currentUserContext) {
         this.orderApplicationService = orderApplicationService;
         this.memberApplicationService = memberApplicationService;
-        this.currentUserClient = currentUserClient;
+        this.currentUserContext = currentUserContext;
     }
 
     @PostMapping
@@ -52,7 +52,7 @@ public class OrderController {
                                              @RequestHeader(HttpHeaders.AUTHORIZATION) String authorization,
                                              @RequestHeader("X-Idempotency-Key") String idempotencyKey,
                                              @Valid @RequestBody OrderCreateRequest request) {
-        CurrentUser currentUser = currentUserClient.currentUser(tenantId, authorization);
+        CurrentUser currentUser = currentUserContext.require(tenantId, authorization);
         Member member = ensureMember(tenantId, currentUser);
         CreateOrderCommand command = new CreateOrderCommand();
         command.setTenantId(tenantId);
@@ -68,7 +68,7 @@ public class OrderController {
                                           @RequestHeader(HttpHeaders.AUTHORIZATION) String authorization,
                                           @RequestHeader("X-Idempotency-Key") String idempotencyKey,
                                           @PathVariable("id") String id) {
-        CurrentUser currentUser = currentUserClient.currentUser(tenantId, authorization);
+        CurrentUser currentUser = currentUserContext.require(tenantId, authorization);
         Member member = ensureMember(tenantId, currentUser);
         ensureCurrentBuyer(orderApplicationService.get(tenantId, id), member, currentUser);
         PayOrderCommand command = new PayOrderCommand();
@@ -84,7 +84,7 @@ public class OrderController {
                                              @RequestHeader(HttpHeaders.AUTHORIZATION) String authorization,
                                              @RequestHeader("X-Idempotency-Key") String idempotencyKey,
                                              @PathVariable("id") String id) {
-        CurrentUser currentUser = currentUserClient.currentUser(tenantId, authorization);
+        CurrentUser currentUser = currentUserContext.require(tenantId, authorization);
         Member member = ensureMember(tenantId, currentUser);
         ensureCurrentBuyer(orderApplicationService.get(tenantId, id), member, currentUser);
         CancelOrderCommand command = new CancelOrderCommand();
@@ -99,7 +99,7 @@ public class OrderController {
     public ApiResponse<OrderResponse> get(@RequestHeader("X-Tenant-ID") String tenantId,
                                           @RequestHeader(HttpHeaders.AUTHORIZATION) String authorization,
                                           @PathVariable("id") String id) {
-        CurrentUser currentUser = currentUserClient.currentUser(tenantId, authorization);
+        CurrentUser currentUser = currentUserContext.require(tenantId, authorization);
         Member member = ensureMember(tenantId, currentUser);
         Order order = orderApplicationService.get(tenantId, id);
         ensureCurrentBuyer(order, member, currentUser);
@@ -110,7 +110,7 @@ public class OrderController {
     public ApiResponse<List<OrderResponse>> list(@RequestHeader("X-Tenant-ID") String tenantId,
                                                  @RequestHeader(HttpHeaders.AUTHORIZATION) String authorization,
                                                  @RequestParam(value = "buyerId", required = false) String ignoredBuyerId) {
-        CurrentUser currentUser = currentUserClient.currentUser(tenantId, authorization);
+        CurrentUser currentUser = currentUserContext.require(tenantId, authorization);
         Member member = ensureMember(tenantId, currentUser);
         List<Order> orders = new ArrayList<>();
         orders.addAll(orderApplicationService.listForBuyer(tenantId, member.getId().value()));

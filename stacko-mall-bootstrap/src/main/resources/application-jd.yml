@@ -15,18 +15,11 @@ spring:
     locations: classpath:db/migration
     baseline-on-migrate: true
 
-mall:
-  user-center:
-    enabled: true
-    base-url: http://localhost:8080
-    acl-check-path: /api/acl/check
-    current-user-path: /api/auth/current
-
-
 logging:
   level:
     org.springframework: warn
     org.mybatis.spring.mapper: error
+    p6spy: ${SQL_LOG_LEVEL:warn}
   config: classpath:logback-plus.xml
 
 mybatis-plus:

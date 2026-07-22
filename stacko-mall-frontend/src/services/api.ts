@@ -1,4 +1,4 @@
-import http from './http';
+import http, { userHttp } from './http';
 import { createIdempotencyKey } from '../utils/idempotency';
 
 export type ApiResponse<T> = {
@@ -91,10 +91,10 @@ export type PaymentCallbackRequest = {
 
 export const api = {
   login: (payload: LoginRequest) =>
-    http.post<ApiResponse<AuthToken>>('/auth/login', payload),
+    userHttp.post<ApiResponse<AuthToken>>('/auth/login', payload),
 
   register: (payload: RegisterRequest) =>
-    http.post<ApiResponse<AuthToken>>('/auth/register', payload),
+    userHttp.post<ApiResponse<AuthToken>>('/auth/register', payload),
 
   getProducts: () => http.get<ApiResponse<Product[]>>('/c/products'),
 
