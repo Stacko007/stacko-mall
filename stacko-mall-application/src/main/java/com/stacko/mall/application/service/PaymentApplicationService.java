@@ -29,11 +29,11 @@ public class PaymentApplicationService {
     public PaymentApplicationService(PaymentRepository paymentRepository,
                                      OrderRepository orderRepository,
                                      IdempotencyService idempotencyService,
-                                     @Value("${payment.mock.callback-secret:stacko-mall-callback-secret}") String callbackSecret) {
+                                     @Value("${payment.mock.callback-secret}") String callbackSecret) {
         this.paymentRepository = paymentRepository;
         this.orderRepository = orderRepository;
         this.idempotencyService = idempotencyService;
-        this.callbackSecret = callbackSecret;
+        this.callbackSecret = requireCallbackSecret(callbackSecret);
     }
 
     @Transactional
@@ -130,6 +130,14 @@ public class PaymentApplicationService {
     private String buildTradeNo(String orderId) {
         String suffix = UUID.randomUUID().toString().replace("-", "").substring(0, 12);
         return "MOCK-" + orderId + "-" + suffix;
+    }
+
+    private static String requireCallbackSecret(String callbackSecret) {
+        String normalized = callbackSecret == null ? "" : callbackSecret.trim();
+        if (normalized.length() < 32) {
+            throw new IllegalStateException("payment.mock.callback-secret must contain at least 32 characters");
+        }
+        return normalized;
     }
 
     private void ensureCallbackRequest(PaymentCallbackCommand command) {

@@ -4,7 +4,7 @@ spring:
   application:
     name: stacko-mall
   profiles:
-    active: jd
+    active: ${STACKO_MALL_PROFILE:jd}
   cloud:
     nacos:
       discovery:
@@ -12,8 +12,8 @@ spring:
         server-addr: ${STACKO_NACOS_SERVER_ADDR:127.0.0.1:8848}
         namespace: ${STACKO_NACOS_NAMESPACE:}
         group: ${STACKO_NACOS_GROUP:DEFAULT_GROUP}
-        username: ${STACKO_NACOS_USERNAME:nacos}
-        password: ${STACKO_NACOS_PASSWORD:nacos}
+        username: ${STACKO_NACOS_USERNAME:}
+        password: ${STACKO_NACOS_PASSWORD:}
         health-indicator:
           enabled: ${STACKO_NACOS_HEALTH_INDICATOR_ENABLED:true}
 
@@ -25,7 +25,7 @@ user:
 stacko:
   mall:
     gateway-identity:
-      signing-secret: ${STACKO_GATEWAY_IDENTITY_SECRET:local-only-change-this-identity-secret}
+      signing-secret: ${STACKO_GATEWAY_IDENTITY_SECRET:}
       max-age: ${STACKO_MALL_GATEWAY_IDENTITY_MAX_AGE:30s}
       allowed-clock-skew: ${STACKO_MALL_GATEWAY_IDENTITY_CLOCK_SKEW:5s}
       gateway-path-prefix: /mall
@@ -43,7 +43,7 @@ order:
 
 payment:
   mock:
-    callback-secret: stacko-mall-callback-secret
+    callback-secret: ${STACKO_MALL_PAYMENT_CALLBACK_SECRET:}
 
 management:
   endpoints:

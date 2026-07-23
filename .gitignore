@@ -45,3 +45,8 @@ stacko-mall-frontend/dist/*
 stacko-mall-frontend/*.tsbuildinfo
 stacko-mall-frontend/vite.config.js
 stacko-mall-frontend/vite.config.d.ts
+
+### Local environment ###
+.env
+.env.local
+*.env.local
