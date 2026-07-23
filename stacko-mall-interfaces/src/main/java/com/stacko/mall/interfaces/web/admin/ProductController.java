@@ -6,7 +6,6 @@ import com.stacko.mall.application.command.UpdateProductCommand;
 import com.stacko.mall.domain.model.Product;
 import com.stacko.mall.interfaces.web.dto.ProductCreateRequest;
 import com.stacko.mall.interfaces.web.view.ProductResponse;
-import com.stacko.mall.interfaces.web.security.RequiresPermission;
 import com.stacko.mall.interfaces.web.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -36,7 +35,6 @@ public class ProductController {
 
     @PostMapping
     @Operation(summary = "创建商品", description = "创建一个新的商品")
-    @RequiresPermission("mall:product:create")
     public ApiResponse<ProductResponse> create(@RequestHeader("X-Tenant-ID") String tenantId,
                                                @Valid @RequestBody ProductCreateRequest request) {
         CreateProductCommand command = new CreateProductCommand();
@@ -50,7 +48,6 @@ public class ProductController {
 
     @PutMapping("/{id}")
     @Operation(summary = "更新商品", description = "更新一个已存在的商品")
-    @RequiresPermission("mall:product:update")
     public ApiResponse<ProductResponse> update(@RequestHeader("X-Tenant-ID") String tenantId,
                                                @PathVariable("id") String id,
                                                @Valid @RequestBody ProductUpdateRequest request) {
@@ -66,7 +63,6 @@ public class ProductController {
     }
 
     @GetMapping("/{id}")
-    @RequiresPermission("mall:product:read")
     public ApiResponse<ProductResponse> get(@RequestHeader("X-Tenant-ID") String tenantId,
                                             @PathVariable("id") String id) {
         Product product = productApplicationService.get(tenantId, id);
@@ -74,7 +70,6 @@ public class ProductController {
     }
 
     @GetMapping
-    @RequiresPermission("mall:product:list")
     public ApiResponse<List<ProductResponse>> list(@RequestHeader("X-Tenant-ID") String tenantId) {
         List<ProductResponse> responses = productApplicationService.list(tenantId).stream()
                 .map(ProductResponse::from)

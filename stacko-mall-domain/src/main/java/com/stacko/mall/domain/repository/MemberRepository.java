@@ -11,7 +11,7 @@ public interface MemberRepository {
 
     Optional<Member> findById(String tenantId, MemberId id);
 
-    Optional<Member> findByStackoUserId(String tenantId, Long stackoUserId);
+    Optional<Member> findByMembershipId(String tenantId, Long membershipId);
 
     List<Member> listByTenant(String tenantId);
 }

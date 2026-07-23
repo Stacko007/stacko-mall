@@ -45,10 +45,10 @@ public class MybatisMemberRepository implements MemberRepository {
     }
 
     @Override
-    public Optional<Member> findByStackoUserId(String tenantId, Long stackoUserId) {
+    public Optional<Member> findByMembershipId(String tenantId, Long membershipId) {
         LambdaQueryWrapper<MemberEntity> query = new LambdaQueryWrapper<>();
         query.eq(MemberEntity::getTenantId, tenantId)
-                .eq(MemberEntity::getStackoUserId, stackoUserId);
+                .eq(MemberEntity::getMembershipId, membershipId);
         return Optional.ofNullable(memberMapper.selectOne(query))
                 .map(MemberEntity::toDomain);
     }

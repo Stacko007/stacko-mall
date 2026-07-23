@@ -79,7 +79,8 @@ CREATE TABLE mall_order_item (
 CREATE TABLE mall_member (
   id VARCHAR(64) NOT NULL,
   tenant_id VARCHAR(64) NOT NULL,
-  stacko_user_id BIGINT NOT NULL,
+  account_id BIGINT NOT NULL,
+  membership_id BIGINT NOT NULL,
   username VARCHAR(64) NULL,
   nickname VARCHAR(128) NULL,
   phone VARCHAR(64) NULL,
@@ -88,7 +89,8 @@ CREATE TABLE mall_member (
   created_at DATETIME(6) NOT NULL,
   updated_at DATETIME(6) NOT NULL,
   PRIMARY KEY (id),
-  UNIQUE KEY uk_mall_member_user (tenant_id, stacko_user_id),
+  UNIQUE KEY uk_mall_member_membership (tenant_id, membership_id),
+  KEY idx_mall_member_account (account_id),
   KEY idx_mall_member_tenant_status (tenant_id, status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
@@ -151,4 +153,3 @@ CREATE TABLE mall_order_status_history (
   KEY idx_order_status_order_id (order_id),
   KEY idx_order_status_tenant (tenant_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-

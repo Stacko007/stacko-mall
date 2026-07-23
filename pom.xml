@@ -32,7 +32,6 @@
         <hutool.version>5.8.35</hutool.version>
         <mybatis-plus.version>3.5.11</mybatis-plus.version>
         <mysql.connector.version>8.4.0</mysql.connector.version>
-        <sa-token.version>1.38.0</sa-token.version>
     </properties>
 
     <dependencyManagement>
@@ -73,14 +72,6 @@
                 <artifactId>mysql-connector-j</artifactId>
                 <version>${mysql.connector.version}</version>
             </dependency>
-            <dependency>
-                <groupId>cn.dev33</groupId>
-                <artifactId>sa-token-bom</artifactId>
-                <version>${sa-token.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-
         </dependencies>
     </dependencyManagement>
 

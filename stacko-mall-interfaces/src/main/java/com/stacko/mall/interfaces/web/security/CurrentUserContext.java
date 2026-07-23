@@ -9,13 +9,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 public class CurrentUserContext {
     private static final String ATTRIBUTE = CurrentUserContext.class.getName() + ".CURRENT_USER";
 
-    private final CurrentUserProvider currentUserProvider;
-
-    public CurrentUserContext(CurrentUserProvider currentUserProvider) {
-        this.currentUserProvider = currentUserProvider;
-    }
-
-    public CurrentUser require(String tenantId, String authorization) {
+    public CurrentUser require(String tenantId) {
         HttpServletRequest request = currentRequest();
         if (request != null) {
             Object cached = request.getAttribute(ATTRIBUTE);
@@ -26,12 +20,7 @@ public class CurrentUserContext {
                 return currentUser;
             }
         }
-
-        CurrentUser currentUser = currentUserProvider.currentUser(tenantId, authorization);
-        if (request != null) {
-            request.setAttribute(ATTRIBUTE, currentUser);
-        }
-        return currentUser;
+        throw new SecurityException("Unauthorized");
     }
 
     public CurrentUser current() {
@@ -44,6 +33,10 @@ public class CurrentUserContext {
             return currentUser;
         }
         throw new SecurityException("Unauthorized");
+    }
+
+    void bind(HttpServletRequest request, CurrentUser currentUser) {
+        request.setAttribute(ATTRIBUTE, currentUser);
     }
 
     private HttpServletRequest currentRequest() {

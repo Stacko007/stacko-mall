@@ -6,8 +6,6 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
-import java.util.concurrent.atomic.AtomicInteger;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -20,24 +18,28 @@ class CurrentUserContextTest {
     }
 
     @Test
-    void cachesCurrentUserWithinSameRequest() {
-        AtomicInteger calls = new AtomicInteger();
-        CurrentUserProvider provider = (tenantId, authorization) -> {
-            calls.incrementAndGet();
-            CurrentUser currentUser = new CurrentUser();
-            currentUser.setId(7L);
-            currentUser.setTenantId(tenantId);
-            return currentUser;
-        };
-        CurrentUserContext context = new CurrentUserContext(provider);
-        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(new MockHttpServletRequest()));
+    void readsBoundIdentityWithinSameRequest() {
+        CurrentUserContext context = new CurrentUserContext();
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
+        CurrentUser currentUser = new CurrentUser(3L, 7L, "alice", "tenant-a");
+        context.bind(request, currentUser);
 
-        CurrentUser first = context.require("tenant-a", "Bearer token");
-        CurrentUser second = context.require("tenant-a", "Bearer token");
+        CurrentUser first = context.require("tenant-a");
+        CurrentUser second = context.current();
 
         assertSame(first, second);
-        assertEquals(1, calls.get());
+        assertEquals(3L, first.getAccountId());
+        assertEquals(7L, first.getId());
         assertThrows(SecurityException.class,
-                () -> context.require("tenant-b", "Bearer token"));
+                () -> context.require("tenant-b"));
+    }
+
+    @Test
+    void rejectsRequestWithoutBoundIdentity() {
+        CurrentUserContext context = new CurrentUserContext();
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(new MockHttpServletRequest()));
+
+        assertThrows(SecurityException.class, () -> context.require("tenant-a"));
     }
 }

@@ -15,7 +15,8 @@ public class MemberEntity {
     @TableId
     private String id;
     private String tenantId;
-    private Long stackoUserId;
+    private Long accountId;
+    private Long membershipId;
     private String username;
     private String nickname;
     private String phone;
@@ -28,7 +29,8 @@ public class MemberEntity {
         MemberEntity entity = new MemberEntity();
         entity.setId(member.getId().value());
         entity.setTenantId(member.getTenantId());
-        entity.setStackoUserId(member.getStackoUserId());
+        entity.setAccountId(member.getAccountId());
+        entity.setMembershipId(member.getMembershipId());
         entity.setUsername(member.getUsername());
         entity.setNickname(member.getNickname());
         entity.setPhone(member.getPhone());
@@ -43,7 +45,8 @@ public class MemberEntity {
         return Member.restore(
                 new MemberId(id),
                 tenantId,
-                stackoUserId,
+                accountId,
+                membershipId,
                 username,
                 nickname,
                 phone,
@@ -78,12 +81,20 @@ public class MemberEntity {
         this.tenantId = tenantId;
     }
 
-    public Long getStackoUserId() {
-        return stackoUserId;
+    public Long getAccountId() {
+        return accountId;
     }
 
-    public void setStackoUserId(Long stackoUserId) {
-        this.stackoUserId = stackoUserId;
+    public void setAccountId(Long accountId) {
+        this.accountId = accountId;
+    }
+
+    public Long getMembershipId() {
+        return membershipId;
+    }
+
+    public void setMembershipId(Long membershipId) {
+        this.membershipId = membershipId;
     }
 
     public String getUsername() {

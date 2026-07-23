@@ -22,21 +22,17 @@ user:
     web:
       swagger-bypass: false
 
-sa-token:
-  token-name: Authorization
-  token-prefix: Bearer
-  timeout: ${STACKO_AUTH_ACCESS_TTL_SECONDS:7200}
-  is-concurrent: false
-  is-share: false
-  is-read-cookie: false
-  is-read-body: false
-  is-read-header: true
-  is-write-header: false
-  token-session-check-login: true
-  is-print: false
-  is-log: false
-
-
+stacko:
+  mall:
+    gateway-identity:
+      signing-secret: ${STACKO_GATEWAY_IDENTITY_SECRET:local-only-change-this-identity-secret}
+      max-age: ${STACKO_MALL_GATEWAY_IDENTITY_MAX_AGE:30s}
+      allowed-clock-skew: ${STACKO_MALL_GATEWAY_IDENTITY_CLOCK_SKEW:5s}
+      gateway-path-prefix: /mall
+      protected-paths:
+        - /api/admin/**
+        - /api/c/orders/**
+        - /api/c/after-sales/**
 
 order:
   timeout:

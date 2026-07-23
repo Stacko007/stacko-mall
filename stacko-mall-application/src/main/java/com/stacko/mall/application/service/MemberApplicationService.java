@@ -17,13 +17,18 @@ public class MemberApplicationService {
     }
 
     @Transactional
-    public Member ensureMember(String tenantId, Long stackoUserId, String username, String phone, String email) {
-        Member member = memberRepository.findByStackoUserId(tenantId, stackoUserId)
+    public Member ensureMember(String tenantId, Long accountId, Long membershipId,
+                               String username, String phone, String email) {
+        Member member = memberRepository.findByMembershipId(tenantId, membershipId)
                 .map(existing -> {
+                    if (!existing.getAccountId().equals(accountId)) {
+                        throw new IllegalStateException("Member account mismatch");
+                    }
                     existing.syncProfile(username, phone, email);
                     return existing;
                 })
-                .orElseGet(() -> Member.create(tenantId, stackoUserId, username, phone, email));
+                .orElseGet(() -> Member.create(
+                        tenantId, accountId, membershipId, username, phone, email));
         member.ensureActive();
         return memberRepository.save(member);
     }
@@ -33,7 +38,6 @@ public class MemberApplicationService {
         for (Member member : memberRepository.listByTenant(tenantId)) {
             String displayName = getDisplayName(member);
             buyerNames.put(member.getId().value(), displayName);
-            buyerNames.put(member.getStackoUserId().toString(), displayName);
         }
         return buyerNames;
     }
@@ -45,6 +49,6 @@ public class MemberApplicationService {
         if (member.getUsername() != null && !member.getUsername().isBlank()) {
             return member.getUsername();
         }
-        return member.getStackoUserId().toString();
+        return member.getMembershipId().toString();
     }
 }

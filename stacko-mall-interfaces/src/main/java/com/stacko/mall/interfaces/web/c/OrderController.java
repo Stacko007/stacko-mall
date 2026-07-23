@@ -16,7 +16,6 @@ import com.stacko.mall.interfaces.web.view.OrderResponse;
 import com.stacko.mall.interfaces.web.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -26,10 +25,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 @RestController("cOrderController")
 @RequestMapping("/api/c/orders")
@@ -49,10 +45,9 @@ public class OrderController {
 
     @PostMapping
     public ApiResponse<OrderResponse> create(@RequestHeader("X-Tenant-ID") String tenantId,
-                                             @RequestHeader(HttpHeaders.AUTHORIZATION) String authorization,
                                              @RequestHeader("X-Idempotency-Key") String idempotencyKey,
                                              @Valid @RequestBody OrderCreateRequest request) {
-        CurrentUser currentUser = currentUserContext.require(tenantId, authorization);
+        CurrentUser currentUser = currentUserContext.require(tenantId);
         Member member = ensureMember(tenantId, currentUser);
         CreateOrderCommand command = new CreateOrderCommand();
         command.setTenantId(tenantId);
@@ -65,12 +60,11 @@ public class OrderController {
 
     @PostMapping("/{id}/pay")
     public ApiResponse<OrderResponse> pay(@RequestHeader("X-Tenant-ID") String tenantId,
-                                          @RequestHeader(HttpHeaders.AUTHORIZATION) String authorization,
                                           @RequestHeader("X-Idempotency-Key") String idempotencyKey,
                                           @PathVariable("id") String id) {
-        CurrentUser currentUser = currentUserContext.require(tenantId, authorization);
+        CurrentUser currentUser = currentUserContext.require(tenantId);
         Member member = ensureMember(tenantId, currentUser);
-        ensureCurrentBuyer(orderApplicationService.get(tenantId, id), member, currentUser);
+        ensureCurrentBuyer(orderApplicationService.get(tenantId, id), member);
         PayOrderCommand command = new PayOrderCommand();
         command.setTenantId(tenantId);
         command.setIdempotencyKey(idempotencyKey);
@@ -81,12 +75,11 @@ public class OrderController {
 
     @PostMapping("/{id}/cancel")
     public ApiResponse<OrderResponse> cancel(@RequestHeader("X-Tenant-ID") String tenantId,
-                                             @RequestHeader(HttpHeaders.AUTHORIZATION) String authorization,
                                              @RequestHeader("X-Idempotency-Key") String idempotencyKey,
                                              @PathVariable("id") String id) {
-        CurrentUser currentUser = currentUserContext.require(tenantId, authorization);
+        CurrentUser currentUser = currentUserContext.require(tenantId);
         Member member = ensureMember(tenantId, currentUser);
-        ensureCurrentBuyer(orderApplicationService.get(tenantId, id), member, currentUser);
+        ensureCurrentBuyer(orderApplicationService.get(tenantId, id), member);
         CancelOrderCommand command = new CancelOrderCommand();
         command.setTenantId(tenantId);
         command.setIdempotencyKey(idempotencyKey);
@@ -97,29 +90,21 @@ public class OrderController {
 
     @GetMapping("/{id}")
     public ApiResponse<OrderResponse> get(@RequestHeader("X-Tenant-ID") String tenantId,
-                                          @RequestHeader(HttpHeaders.AUTHORIZATION) String authorization,
                                           @PathVariable("id") String id) {
-        CurrentUser currentUser = currentUserContext.require(tenantId, authorization);
+        CurrentUser currentUser = currentUserContext.require(tenantId);
         Member member = ensureMember(tenantId, currentUser);
         Order order = orderApplicationService.get(tenantId, id);
-        ensureCurrentBuyer(order, member, currentUser);
+        ensureCurrentBuyer(order, member);
         return ApiResponse.ok(OrderResponse.from(order));
     }
 
     @GetMapping
     public ApiResponse<List<OrderResponse>> list(@RequestHeader("X-Tenant-ID") String tenantId,
-                                                 @RequestHeader(HttpHeaders.AUTHORIZATION) String authorization,
                                                  @RequestParam(value = "buyerId", required = false) String ignoredBuyerId) {
-        CurrentUser currentUser = currentUserContext.require(tenantId, authorization);
+        CurrentUser currentUser = currentUserContext.require(tenantId);
         Member member = ensureMember(tenantId, currentUser);
-        List<Order> orders = new ArrayList<>();
-        orders.addAll(orderApplicationService.listForBuyer(tenantId, member.getId().value()));
-        orders.addAll(orderApplicationService.listForBuyer(tenantId, currentUser.userIdAsString()));
-        Map<String, Order> deduplicated = new LinkedHashMap<>();
-        for (Order order : orders) {
-            deduplicated.put(order.getId().value(), order);
-        }
-        List<OrderResponse> responseViews = deduplicated.values().stream()
+        List<OrderResponse> responseViews = orderApplicationService
+                .listForBuyer(tenantId, member.getId().value()).stream()
                 .map(OrderResponse::from)
                 .toList();
         return ApiResponse.ok(responseViews);
@@ -137,6 +122,7 @@ public class OrderController {
     private Member ensureMember(String tenantId, CurrentUser currentUser) {
         return memberApplicationService.ensureMember(
                 tenantId,
+                currentUser.getAccountId(),
                 currentUser.getId(),
                 currentUser.getUsername(),
                 currentUser.getPhone(),
@@ -144,8 +130,8 @@ public class OrderController {
         );
     }
 
-    private void ensureCurrentBuyer(Order order, Member member, CurrentUser currentUser) {
-        if (!order.getBuyerId().equals(member.getId().value()) && !order.getBuyerId().equals(currentUser.userIdAsString())) {
+    private void ensureCurrentBuyer(Order order, Member member) {
+        if (!order.getBuyerId().equals(member.getId().value())) {
             throw new SecurityException("Order does not belong to current user");
         }
     }

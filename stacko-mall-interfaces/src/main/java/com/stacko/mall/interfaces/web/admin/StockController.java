@@ -8,7 +8,6 @@ import com.stacko.mall.domain.model.Stock;
 import com.stacko.mall.interfaces.web.dto.StockAdjustRequest;
 import com.stacko.mall.interfaces.web.dto.StockSetRequest;
 import com.stacko.mall.interfaces.web.view.StockResponse;
-import com.stacko.mall.interfaces.web.security.RequiresPermission;
 import com.stacko.mall.interfaces.web.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -34,7 +33,6 @@ public class StockController {
     }
 
     @PutMapping("/{productId}")
-    @RequiresPermission("mall:stock:set")
     public ApiResponse<StockResponse> set(@RequestHeader("X-Tenant-ID") String tenantId,
                                           @PathVariable("productId") String productId,
                                           @Valid @RequestBody StockSetRequest request) {
@@ -47,7 +45,6 @@ public class StockController {
     }
 
     @PostMapping("/{productId}/adjust")
-    @RequiresPermission("mall:stock:adjust")
     public ApiResponse<StockResponse> adjust(@RequestHeader("X-Tenant-ID") String tenantId,
                                              @PathVariable("productId") String productId,
                                              @Valid @RequestBody StockAdjustRequest request) {
@@ -60,7 +57,6 @@ public class StockController {
     }
 
     @GetMapping("/{productId}")
-    @RequiresPermission("mall:stock:read")
     public ApiResponse<StockResponse> get(@RequestHeader("X-Tenant-ID") String tenantId,
                                           @PathVariable("productId") String productId) {
         Stock stock = stockApplicationService.get(tenantId, productId);
@@ -68,7 +64,6 @@ public class StockController {
     }
 
     @GetMapping
-    @RequiresPermission("mall:stock:list")
     public ApiResponse<List<StockResponse>> list(@RequestHeader("X-Tenant-ID") String tenantId) {
         List<StockResponse> responses = stockApplicationService.list(tenantId).stream()
                 .map(this::toResponse)

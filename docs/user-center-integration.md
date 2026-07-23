@@ -1,88 +1,128 @@
-# stacko-mall 接入用户中心记录
+# stacko-mall 接入用户中心
 
-## 当前方向
+更新日期：2026-07-23。
 
-`stacko-mall` 不再嵌入 `stacko-user-starter` 或 `stacko-user-interfaces`。商城作为独立业务应用运行，用户和 RBAC 主数据仍由用户中心维护。
+## 当前架构
 
-用户中心已统一签发 Sa-Token。商城 C 端身份和管理端权限均通过认证 Redis 本地读取 SaSession，正常业务请求不再逐请求调用 `/api/auth/current` 或 `/api/acl/check`。
+`stacko-mall` 是独立业务服务，不依赖用户中心代码模块，不保存账号密码和 RBAC 主数据。
 
-完整迁移阶段和验收记录见 `stacko-user/docs/sa-token-distributed-auth-refactor-plan.md`。认证迁移已经收口，商城后端不再保留远程鉴权回退链路。
+- 用户中心负责注册、登录、租户成员和角色权限。
+- Gateway 读取用户中心 Sa-Token Session，并执行商城管理接口 RBAC。
+- Gateway 为通过认证和授权的请求生成 V2 签名身份信封。
+- 商城只验证签名身份，不连接认证 Redis，也不使用 Sa-Token。
+- 商城继续负责订单归属、库存、支付、售后等业务规则。
 
-## 已调整内容
+浏览器只能通过 Gateway 调用后端：
 
-- `stacko-mall-bootstrap` 去掉 `stacko-user-starter`、`stacko-user-interfaces` 依赖。
-- `StackoMallApplication` 只扫描 `com.stacko.mall`。
-- `stacko-mall-interfaces` 去掉 `stacko-user-contract`、`stacko-user-shared-web` 依赖。
-- 商城侧新增本地 `ApiResponse`，避免 API 响应结构依赖用户中心代码包。
-- 商城侧新增本地 `RequiresPermission`，管理端 controller 继续用注解表达业务权限。
-- 商城侧身份和权限只使用共享 Redis 中的 Sa-Token Session。
-
-## 认证配置
-
-商城后端不再需要 `mall.user-center.*` 配置。用户中心与商城必须连接同一个认证 Redis，并统一使用：
-
-- Sa-Token 账号体系：固定为 `stacko-user`
-- Token Header：`Authorization`
-- Token 前缀：`Bearer`
-- Sa-Token Redis DAO：`sa-token-redis-jackson`
-
-## 本地联调启动
-
-当前联调端口约定：
-
-- Gateway：`http://localhost:8088`
-- 用户中心后端：`http://localhost:8080`
-- 商城后端：`http://localhost:8081`
-- 商城 C 端前端：`http://localhost:5173`
-- 商城后台前端：`http://localhost:5174`
-- 用户中心管理前端：`http://localhost:5175`
-
-三个前端统一通过 Gateway 访问后端。Vite 只代理以下两个前缀到 `http://localhost:8088`：
-
-- `/user/api/**` 由 Gateway 路由到用户中心。
-- `/mall/api/**` 由 Gateway 路由到商城。
-
-登录、注册等认证请求使用 `/user/api/**`，商品、订单等业务请求使用 `/mall/api/**`。Nacos 只负责服务注册与发现，不会自动改写浏览器请求；前端不能再直接代理到 `8080` 或 `8081`。
-
-本地默认 Gateway 地址为 `http://localhost:8088`，需要覆盖时在对应前端的 `.env.local` 中设置 `VITE_GATEWAY_TARGET`。`VITE_USER_API_BASE` 和 `VITE_MALL_API_BASE` 只用于部署路径确有差异时覆盖默认的 `/user/api`、`/mall/api`，日常本地联调不需要设置。
-
-当前联调用户中心使用 MySQL + MyBatis-Plus + Sa-Token + Redis，联调账号为：
-
-- 租户：`stacko-mall`
-- 用户名：`stacko001`
-- 密码：`123456`
-
-账号、租户和权限维护在用户中心 MySQL；会话保存在 Redis。验证商城后台接口前，需要在用户中心为账号分配对应商城业务权限码。
-
-## 权限校验流程
-
-1. 管理端接口标注商城本地 `@RequiresPermission("mall:xxx")`。
-2. `PermissionAspect` 从当前请求读取：
-   - `Authorization`
-   - `X-Tenant-ID`
-3. `CurrentUserContext` 本地读取共享 Redis 中的 SaSession，并校验 token、状态和租户。
-4. `MallStpInterface` 向 Sa-Token提供当前 Session中的角色和权限，`LocalPermissionChecker` 通过 `StpLogic` 校验。
-5. `SaStrategy.hasElement` 保持完整权限码精确匹配，不启用 Sa-Token默认通配匹配。
-6. 匹配成功才允许执行业务接口；同一请求复用已经解析的当前用户。
-
-角色授权、撤权、角色权限修改、用户禁用等操作会在用户中心清理受影响的 SaSession，用户需要重新登录并获得最新权限快照。权限维护必须通过用户中心应用接口完成，不能直接修改数据库绕过会话失效逻辑。
-
-用户中心 `/api/acl/check` 仍可供其他系统兼容或诊断，但商城已经删除对应客户端。
-
-历史数据库中若已存在 `acl:check`，它不会影响运行。确认没有其他系统依赖后，可选执行以下 SQL 清理：
-
-```sql
-DELETE FROM up_role_permissions WHERE permission_code = 'acl:check';
-DELETE FROM up_user_permissions WHERE permission_code = 'acl:check';
-DELETE FROM up_permissions WHERE code = 'acl:check';
+```text
+前端 -> Gateway -> 用户中心
+前端 -> Gateway -> 商城
 ```
 
-## 商城后台模块权限
+## 可信身份协议
 
-库存、售后和支付查询模块当前使用以下权限码：
+Gateway 请求头：
+
+```text
+X-Stacko-Identity: base64url(payload).base64url(HMAC-SHA256(payload))
+X-Tenant-ID: stacko-mall
+X-Request-Id: ...
+```
+
+V2 payload 字段：
+
+```json
+{
+  "version": 2,
+  "accountId": "3",
+  "membershipId": "7",
+  "tenantId": "stacko-mall",
+  "username": "alice",
+  "issuedAt": 1784793600,
+  "method": "GET",
+  "path": "/mall/api/admin/products"
+}
+```
+
+商城验签时必须同时满足：
+
+1. HMAC-SHA256 签名正确。
+2. `version` 等于 2。
+3. `issuedAt` 未超过 30 秒，未来时钟偏差不超过 5 秒。
+4. HTTP 方法与信封一致。
+5. `/mall + 商城当前请求路径` 与信封原始路径一致。
+6. `X-Tenant-ID` 与信封租户一致。
+
+V1 信封没有绑定方法和路径，商城明确拒绝 V1，避免低权限身份头被重放到其他管理接口。
+
+## 权限边界
+
+Gateway 是商城管理权限的唯一粗粒度执行点，权限规则维护在 `stacko-gateway/src/main/resources/application.yml`。
+
+商城已经删除：
+
+- 本地 `@RequiresPermission`
+- `PermissionAspect`
+- `LocalPermissionChecker`
+- `MallStpInterface`
+- `SaTokenCurrentUserProvider`
+- Sa-Token 和认证 Redis 依赖
+
+商城仍保留：
+
+- 所有 `/api/admin/**` 和 `/api/c/orders/**` 必须携带有效 Gateway 身份。
+- 订单只能由当前商城会员查询、支付和取消。
+- 售后申请和查询必须关联当前商城会员自己的订单。
+- 租户 ID 必须与签名身份一致。
+- 库存、支付、订单、售后的领域状态转换校验。
+
+## 配置
+
+Gateway 与商城必须使用相同的身份签名密钥：
+
+```text
+STACKO_GATEWAY_IDENTITY_SECRET
+```
+
+商城配置：
+
+```yaml
+stacko:
+  mall:
+    gateway-identity:
+      signing-secret: ${STACKO_GATEWAY_IDENTITY_SECRET}
+      max-age: 30s
+      allowed-clock-skew: 5s
+      gateway-path-prefix: /mall
+      protected-paths:
+        - /api/admin/**
+        - /api/c/orders/**
+        - /api/c/after-sales/**
+```
+
+生产环境密钥必须由密钥管理系统注入，至少 32 字节。商城不再需要 `spring.data.redis` 或 `sa-token` 配置。
+
+## 本地联调
+
+端口约定：
+
+- Gateway：`8088`，第二实例 `18088`
+- 用户中心：`8080`
+- 商城：`8081`
+- 商城 C 端前端：`5173`
+- 商城管理端前端：`5174`
+- 用户中心管理前端：`5175`
+
+前端继续携带 Bearer Token，但商城不解析该 Token。Gateway 完成认证后注入可信身份。
+
+## 商城权限码
 
 | 模块 | 权限码 | 用途 |
 | --- | --- | --- |
+| 商品 | `mall:product:list` | 商品列表 |
+| 商品 | `mall:product:read` | 商品详情 |
+| 商品 | `mall:product:create` | 创建商品 |
+| 商品 | `mall:product:update` | 更新商品 |
 | 订单 | `mall:order:list` | 订单列表 |
 | 订单 | `mall:order:read` | 订单详情 |
 | 订单 | `mall:order:ship` | 订单发货 |
@@ -91,62 +131,25 @@ DELETE FROM up_permissions WHERE code = 'acl:check';
 | 库存 | `mall:stock:read` | 库存详情 |
 | 库存 | `mall:stock:set` | 设置库存 |
 | 库存 | `mall:stock:adjust` | 调整库存 |
-| 售后 | `mall:afterSales:read` | 售后详情查询 |
+| 售后 | `mall:afterSales:read` | 售后详情 |
 | 售后 | `mall:afterSales:review` | 售后审核 |
 | 售后 | `mall:afterSales:refund` | 售后退款 |
-| 支付 | `mall:payment:read` | 支付详情查询 |
+| 支付 | `mall:payment:read` | 支付详情 |
 
-执行 `docs/seed-mall-admin-module-permissions.sql` 可将上述权限定义写入用户中心的 `up_permissions` 表。脚本可重复执行，只更新权限名称，不会自动给角色或用户授权；执行后在用户中心后台按租户分配即可。
+权限初始化脚本仍为 `docs/seed-mall-admin-module-permissions.sql`。
 
-## C 端当前用户流程
+## C 端会员
 
-C 端订单接口不再信任请求体里的 `buyerId`：
+C 端订单接口从签名身份取得 `accountId` 和 `membershipId`，再查找或创建 `mall_member`。商城表分别保存 `account_id` 和 `membership_id`，其中 `(tenant_id, membership_id)` 唯一。
 
-1. C 端请求携带 `Authorization` 和 `X-Tenant-ID`。
-2. 商城后端通过 `CurrentUserContext` 本地读取 Sa-Token Session；同一请求只解析一次，并由 `MallStpInterface` 复用该身份完成权限校验。
-3. 商城后端按用户中心返回的 `id` 查找或创建 `mall_member`。
-4. 商城后端使用 `mall_member.id` 作为订单 `buyerId`。
-5. 订单查询、支付、取消前都会校验订单 `buyerId` 等于当前会员 ID；历史订单兼容旧的用户中心 userId。
+订单统一使用 `mall_member.id` 作为 `buyerId`。订单查询、支付、取消和售后只按该商城会员 ID 执行归属校验，不再兼容旧用户中心 ID。
 
-本地身份解析会校验 Token 有效性、用户状态和租户一致性。Redis 不可用返回 503；无效 Token 返回 401；跨租户访问返回 403。
+## 部署顺序
 
-`OrderCreateRequest.buyerId` 暂时保留为兼容字段，但后端忽略它。后续前端和接口文档稳定后可以删除。
+1. 确认 Gateway 与商城使用相同签名密钥。
+2. 执行 `phase-h0-mall-member-identity.sql`，确认没有未解析身份。
+3. 重启全部 Gateway，再重启商城。
+4. 完成通过 Gateway、绕过 Gateway、伪造头、跨路径重放和 C 端订单验收。
+5. 生产网络只暴露 Gateway，禁止客户端访问商城服务端口。
 
-## 数据边界
-
-商城库不保存账号密码和 RBAC 主数据。
-
-商城库已新增业务用户表：
-
-```sql
-CREATE TABLE mall_member (
-  id VARCHAR(64) NOT NULL,
-  tenant_id VARCHAR(64) NOT NULL,
-  stacko_user_id BIGINT NOT NULL,
-  username VARCHAR(64) NULL,
-  nickname VARCHAR(128) NULL,
-  phone VARCHAR(64) NULL,
-  email VARCHAR(128) NULL,
-  status VARCHAR(32) NOT NULL,
-  created_at DATETIME(6) NOT NULL,
-  updated_at DATETIME(6) NOT NULL,
-  PRIMARY KEY (id),
-  UNIQUE KEY uk_mall_member_user (tenant_id, stacko_user_id),
-  INDEX idx_mall_member_tenant_status (tenant_id, status)
-);
-```
-
-当前实现：
-
-- `mall_member.id` 是商城业务会员 ID。
-- `mall_member.stacko_user_id` 保存用户中心账号 ID。
-- 新订单的 `mall_order.buyer_id` 保存 `mall_member.id`。
-- 为兼容历史数据，C 端订单列表和订单归属校验暂时同时兼容旧的用户中心 userId。
-- 业务表不跨库建外键。
-
-## 后续待做
-
-1. 前端彻底移除历史 `buyerId` localStorage。
-2. 增加会员管理接口和管理端页面，维护昵称、等级、状态等商城业务字段。
-3. 增加真实 Redis 联调 smoke 测试：登录用户中心、调用商城管理端、撤权后旧 Token 失效。
-4. 部署环境由负载均衡将 `/user/**` 和 `/mall/**` 统一转发到 Gateway 集群。
+阶段 F 详细记录见 `phase-f-trusted-gateway-identity.md`。
