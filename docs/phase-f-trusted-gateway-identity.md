@@ -1,6 +1,6 @@
 # 阶段 F：商城消费 Gateway 可信身份
 
-更新日期：2026-07-23。
+更新日期：2026-07-24。
 
 ## 1. 当前状态
 
@@ -10,17 +10,19 @@
 
 Gateway：
 
-- 身份信封从 V1 升级为 V2。
-- V2 签名绑定账号、成员、租户、签发时间、HTTP 方法和原始 Gateway 路径。
+- 身份信封当前为 V3；V3 在 V2 的请求绑定字段上增加签名权限集合。
+- V3 签名绑定账号、成员、租户、权限、签发时间、HTTP 方法和原始 Gateway 路径。
 - 继续清理客户端传入的 `X-Stacko-Identity`。
 
 商城：
 
 - 新增 `GatewayIdentityFilter` 和 `GatewayIdentityVerifier`。
-- `/api/admin/**`、`/api/c/orders/**`、`/api/c/after-sales/**` 默认要求有效 V2 身份。
+- `/api/admin/**`、`/api/c/orders/**`、`/api/c/after-sales/**` 默认要求有效 V3 身份。
 - `CurrentUserContext` 只读取过滤器写入的请求身份。
 - C 端订单接口不再读取 `Authorization`。
-- 删除商城本地权限注解、切面、Sa-Token Provider、`MallStpInterface` 和认证诊断器。
+- 商城使用本地 `@RequiresPermission` 校验 V3 中的签名权限集合。
+- `/api/admin/**` 缺少权限注解时默认拒绝。
+- 删除旧 Sa-Token 权限切面、Provider、`MallStpInterface` 和认证诊断器。
 - 删除 Sa-Token、Redis starter、Redis DAO 和全部认证 Redis 配置。
 
 ## 3. 安全边界
@@ -31,7 +33,7 @@ Gateway：
 - 方法或路径不一致时返回 401。
 - 租户不一致时返回 403。
 - 公开接口不要求身份，但携带伪造身份头时仍返回 401。
-- Gateway 权限规则负责管理端粗粒度 RBAC。
+- 商城 `PermissionAspect` 负责管理端功能权限。
 - 商城负责资源归属和领域状态校验。
 - C 端售后申请和查询校验关联订单属于当前商城会员。
 
@@ -40,19 +42,21 @@ Gateway：
 ## 4. 自动化验证
 
 ```text
-stacko-gateway: 24 tests passed, BUILD SUCCESS
-stacko-mall: 13 tests passed, BUILD SUCCESS
+stacko-gateway: BUILD SUCCESS
+stacko-mall: BUILD SUCCESS
 ```
 
 覆盖：
 
-- V2 字段、方法和原始路径签发。
-- 正确验签、篡改签名、过期、未来时间、V1 拒绝。
+- V3 字段、权限、方法和原始路径签发。
+- 正确验签、篡改签名、过期、未来时间、旧版本拒绝。
 - 跨方法和跨路径重放拒绝。
 - 受保护路径无身份 401。
 - 租户不匹配 403。
 - 公开路径无身份放行、伪造身份拒绝。
 - `CurrentUserContext` 请求身份与租户隔离。
+- 管理接口权限允许、权限拒绝和漏注解默认拒绝。
+- 现有管理 Controller 权限注解覆盖检查。
 - C 端售后不能操作其他买家的订单。
 
 Reactor 依赖树确认不存在：
@@ -72,12 +76,12 @@ spring-data-redis
 3. 用户中心不需要重启。
 4. 前端不需要修改，仍然访问 Gateway。
 
-不要先重启商城后保留旧 Gateway，V2 商城会拒绝 V1 身份。
+不要只重启一侧。V3 商城会拒绝 V2 身份，旧商城也不能解析 V3 权限字段完成本地授权。
 
 ## 6. 运行验收
 
 1. 使用有商品和订单权限的商城管理员通过 `8088`、`18088` 请求商品、订单列表，均应返回 200。
-2. 使用同一管理员请求没有权限的库存列表，应由 Gateway 返回 403。
+2. 使用同一管理员请求没有权限的库存列表，应由商城权限切面返回 403。
 3. 使用租户管理员通过 Gateway 请求管理接口，应正常工作。
 4. 直接请求 `http://localhost:8081/api/admin/products`，即使携带有效 Bearer Token也应返回 401。
 5. 直接请求商城并伪造 `X-Stacko-Identity`，应返回 401。
@@ -91,7 +95,7 @@ spring-data-redis
 
 - `8088`、`18088` Gateway 和 `8081` 商城健康检查均为 `UP`。
 - 有效租户管理员令牌经 `8088` 请求商品列表返回 200。
-- 同一令牌经 `18088` 请求订单列表返回 200，证明两个 Gateway 实例均可签发商城接受的 V2 身份。
+- 同一令牌经 `18088` 请求订单列表返回 200，证明两个 Gateway 实例均可签发商城接受的可信身份。
 - 直连 `8081/api/admin/products` 时，即使携带有效 Bearer Token 也返回 401。
 - 直连商城并携带伪造 `X-Stacko-Identity` 返回 401。
 - 直连 `8081/api/c/orders` 时，仅携带有效 Bearer Token 返回 401。
@@ -115,3 +119,10 @@ spring-data-redis
 ## 8. 下一阶段
 
 执行 H0 数据库脚本并完成重新登录、成员、订单和售后冒烟。阶段 G 事件架构暂缓。
+
+## 9. 阶段 I 更新
+
+Gateway 业务权限注册表已删除，可信身份升级到 V3。商城管理端使用
+`PermissionAspect` 和 `@RequiresPermission` 执行功能权限。
+后续新增商城管理接口不再修改 Gateway，完整开发规则见
+`../../stacko-gateway/docs/phase-i-authorization-boundary.md`。

@@ -9,6 +9,8 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.Instant;
 import java.util.Base64;
+import java.util.List;
+import java.util.Set;
 
 @Component
 public class GatewayIdentityVerifier {
@@ -45,7 +47,8 @@ public class GatewayIdentityVerifier {
                     parseId(envelope.accountId()),
                     parseId(envelope.membershipId()),
                     envelope.username(),
-                    envelope.tenantId());
+                    envelope.tenantId(),
+                    Set.copyOf(envelope.permissions()));
         } catch (GatewayIdentityException e) {
             throw e;
         } catch (Exception e) {
@@ -54,10 +57,12 @@ public class GatewayIdentityVerifier {
     }
 
     private void validate(IdentityEnvelope envelope, String method, String gatewayPath) {
-        if (envelope.version() != 2
+        if (envelope.version() != 3
                 || !hasText(envelope.accountId())
                 || !hasText(envelope.membershipId())
                 || !hasText(envelope.tenantId())
+                || envelope.permissions() == null
+                || envelope.permissions().stream().anyMatch(permission -> !hasText(permission))
                 || !method.equalsIgnoreCase(envelope.method())
                 || !gatewayPath.equals(envelope.path())) {
             throw GatewayIdentityException.unauthorized();
@@ -105,6 +110,7 @@ public class GatewayIdentityVerifier {
             String membershipId,
             String tenantId,
             String username,
+            List<String> permissions,
             long issuedAt,
             String method,
             String path

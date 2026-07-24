@@ -5,6 +5,7 @@ import com.stacko.mall.application.command.CreateProductCommand;
 import com.stacko.mall.application.command.UpdateProductCommand;
 import com.stacko.mall.domain.model.Product;
 import com.stacko.mall.interfaces.web.dto.ProductCreateRequest;
+import com.stacko.mall.interfaces.web.security.RequiresPermission;
 import com.stacko.mall.interfaces.web.view.ProductResponse;
 import com.stacko.mall.interfaces.web.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -34,6 +35,7 @@ public class ProductController {
     }
 
     @PostMapping
+    @RequiresPermission("mall:product:create")
     @Operation(summary = "创建商品", description = "创建一个新的商品")
     public ApiResponse<ProductResponse> create(@RequestHeader("X-Tenant-ID") String tenantId,
                                                @Valid @RequestBody ProductCreateRequest request) {
@@ -47,6 +49,7 @@ public class ProductController {
     }
 
     @PutMapping("/{id}")
+    @RequiresPermission("mall:product:update")
     @Operation(summary = "更新商品", description = "更新一个已存在的商品")
     public ApiResponse<ProductResponse> update(@RequestHeader("X-Tenant-ID") String tenantId,
                                                @PathVariable("id") String id,
@@ -63,6 +66,7 @@ public class ProductController {
     }
 
     @GetMapping("/{id}")
+    @RequiresPermission("mall:product:read")
     public ApiResponse<ProductResponse> get(@RequestHeader("X-Tenant-ID") String tenantId,
                                             @PathVariable("id") String id) {
         Product product = productApplicationService.get(tenantId, id);
@@ -70,6 +74,7 @@ public class ProductController {
     }
 
     @GetMapping
+    @RequiresPermission("mall:product:list")
     public ApiResponse<List<ProductResponse>> list(@RequestHeader("X-Tenant-ID") String tenantId) {
         List<ProductResponse> responses = productApplicationService.list(tenantId).stream()
                 .map(ProductResponse::from)

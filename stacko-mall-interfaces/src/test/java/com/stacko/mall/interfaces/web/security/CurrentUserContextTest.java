@@ -22,7 +22,8 @@ class CurrentUserContextTest {
         CurrentUserContext context = new CurrentUserContext();
         MockHttpServletRequest request = new MockHttpServletRequest();
         RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
-        CurrentUser currentUser = new CurrentUser(3L, 7L, "alice", "tenant-a");
+        CurrentUser currentUser = new CurrentUser(
+                3L, 7L, "alice", "tenant-a", java.util.Set.of("mall:product:list"));
         context.bind(request, currentUser);
 
         CurrentUser first = context.require("tenant-a");

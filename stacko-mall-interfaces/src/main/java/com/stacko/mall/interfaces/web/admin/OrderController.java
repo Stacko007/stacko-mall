@@ -6,6 +6,7 @@ import com.stacko.mall.application.service.MemberApplicationService;
 import com.stacko.mall.application.service.OrderApplicationService;
 import com.stacko.mall.domain.model.Order;
 import com.stacko.mall.interfaces.web.dto.OrderShipRequest;
+import com.stacko.mall.interfaces.web.security.RequiresPermission;
 import com.stacko.mall.interfaces.web.view.OrderResponse;
 import com.stacko.mall.interfaces.web.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -39,6 +40,7 @@ public class OrderController {
     }
 
     @GetMapping
+    @RequiresPermission("mall:order:list")
     public ApiResponse<List<OrderResponse>> list(@RequestHeader("X-Tenant-ID") @NotBlank String tenantId,
                                                  @RequestParam(value = "buyerId", required = false) String buyerId) {
         List<Order> orders = buyerId == null || buyerId.isBlank()
@@ -52,6 +54,7 @@ public class OrderController {
     }
 
     @GetMapping("/{id}")
+    @RequiresPermission("mall:order:read")
     public ApiResponse<OrderResponse> get(@RequestHeader("X-Tenant-ID") @NotBlank String tenantId,
                                           @PathVariable("id") @NotBlank String id) {
         Order order = orderApplicationService.get(tenantId, id);
@@ -60,6 +63,7 @@ public class OrderController {
     }
 
     @PostMapping("/{id}/ship")
+    @RequiresPermission("mall:order:ship")
     public ApiResponse<OrderResponse> ship(@RequestHeader("X-Tenant-ID") @NotBlank String tenantId,
                                            @PathVariable("id") @NotBlank String id,
                                            @Valid @RequestBody OrderShipRequest request) {
@@ -73,6 +77,7 @@ public class OrderController {
     }
 
     @PostMapping("/{id}/close")
+    @RequiresPermission("mall:order:close")
     public ApiResponse<OrderResponse> close(@RequestHeader("X-Tenant-ID") @NotBlank String tenantId,
                                             @PathVariable("id") @NotBlank String id) {
         CloseOrderCommand command = new CloseOrderCommand();

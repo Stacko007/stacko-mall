@@ -4,6 +4,7 @@ import com.stacko.mall.application.service.PaymentApplicationService;
 import com.stacko.mall.domain.model.Payment;
 import com.stacko.mall.interfaces.web.view.PaymentResponse;
 import com.stacko.mall.interfaces.web.ApiResponse;
+import com.stacko.mall.interfaces.web.security.RequiresPermission;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.validation.annotation.Validated;
@@ -25,6 +26,7 @@ public class PaymentController {
     }
 
     @GetMapping("/{id}")
+    @RequiresPermission("mall:payment:read")
     public ApiResponse<PaymentResponse> get(@RequestHeader("X-Tenant-ID") @NotBlank String tenantId,
                                             @PathVariable("id") @NotBlank String id) {
         Payment payment = paymentApplicationService.get(tenantId, id);

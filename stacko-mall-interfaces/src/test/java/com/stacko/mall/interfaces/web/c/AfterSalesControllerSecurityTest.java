@@ -46,7 +46,7 @@ class AfterSalesControllerSecurityTest {
         CurrentUserContext currentUserContext = new CurrentUserContext() {
             @Override
             public CurrentUser require(String tenantId) {
-                return new CurrentUser(3L, 7L, "alice", tenantId);
+                return new CurrentUser(3L, 7L, "alice", tenantId, java.util.Set.of());
             }
         };
         AfterSalesController controller = new AfterSalesController(

@@ -1,15 +1,15 @@
 # stacko-mall 接入用户中心
 
-更新日期：2026-07-23。
+更新日期：2026-07-24。
 
 ## 当前架构
 
 `stacko-mall` 是独立业务服务，不依赖用户中心代码模块，不保存账号密码和 RBAC 主数据。
 
 - 用户中心负责注册、登录、租户成员和角色权限。
-- Gateway 读取用户中心 Sa-Token Session，并执行商城管理接口 RBAC。
-- Gateway 为通过认证和授权的请求生成 V2 签名身份信封。
-- 商城只验证签名身份，不连接认证 Redis，也不使用 Sa-Token。
+- Gateway 读取用户中心 Sa-Token Session，完成认证和租户校验。
+- Gateway 为通过认证的请求生成包含权限集合的 V3 签名身份信封。
+- 商城验证签名身份并执行商城管理接口授权，不连接认证 Redis，也不使用 Sa-Token。
 - 商城继续负责订单归属、库存、支付、售后等业务规则。
 
 浏览器只能通过 Gateway 调用后端：
@@ -29,15 +29,18 @@ X-Tenant-ID: stacko-mall
 X-Request-Id: ...
 ```
 
-V2 payload 字段：
+V3 payload 字段：
 
 ```json
 {
-  "version": 2,
+  "version": 3,
   "accountId": "3",
   "membershipId": "7",
   "tenantId": "stacko-mall",
   "username": "alice",
+  "permissions": [
+    "mall:product:list"
+  ],
   "issuedAt": 1784793600,
   "method": "GET",
   "path": "/mall/api/admin/products"
@@ -47,22 +50,22 @@ V2 payload 字段：
 商城验签时必须同时满足：
 
 1. HMAC-SHA256 签名正确。
-2. `version` 等于 2。
+2. `version` 等于 3。
 3. `issuedAt` 未超过 30 秒，未来时钟偏差不超过 5 秒。
 4. HTTP 方法与信封一致。
 5. `/mall + 商城当前请求路径` 与信封原始路径一致。
 6. `X-Tenant-ID` 与信封租户一致。
 
-V1 信封没有绑定方法和路径，商城明确拒绝 V1，避免低权限身份头被重放到其他管理接口。
+V1 没有绑定方法和路径，V2 没有权限集合；商城只接受当前 V3。
 
 ## 权限边界
 
-Gateway 是商城管理权限的唯一粗粒度执行点，权限规则维护在 `stacko-gateway/src/main/resources/application.yml`。
+Gateway 不维护商城业务接口到权限码的映射。商城从签名身份读取权限，通过
+`@RequiresPermission` 和 `PermissionAspect` 执行管理端功能授权。
 
-商城已经删除：
+商城已经删除旧实现：
 
-- 本地 `@RequiresPermission`
-- `PermissionAspect`
+- 旧的 Sa-Token `PermissionAspect`
 - `LocalPermissionChecker`
 - `MallStpInterface`
 - `SaTokenCurrentUserProvider`
@@ -71,6 +74,7 @@ Gateway 是商城管理权限的唯一粗粒度执行点，权限规则维护在
 商城仍保留：
 
 - 所有 `/api/admin/**` 和 `/api/c/orders/**` 必须携带有效 Gateway 身份。
+- `/api/admin/**` 方法必须声明 `@RequiresPermission`，漏注解默认返回 403。
 - 订单只能由当前商城会员查询、支付和取消。
 - 售后申请和查询必须关联当前商城会员自己的订单。
 - 租户 ID 必须与签名身份一致。
@@ -153,3 +157,5 @@ C 端订单接口从签名身份取得 `accountId` 和 `membershipId`，再查�
 5. 生产网络只暴露 Gateway，禁止客户端访问商城服务端口。
 
 阶段 F 详细记录见 `phase-f-trusted-gateway-identity.md`。
+当前授权边界与新功能开发规则见
+`../../stacko-gateway/docs/phase-i-authorization-boundary.md`。

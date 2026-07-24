@@ -10,6 +10,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -29,6 +30,7 @@ class GatewayIdentityVerifierTest {
         assertEquals(3L, currentUser.getAccountId());
         assertEquals(7L, currentUser.getId());
         assertEquals("tenant-a", currentUser.getTenantId());
+        assertEquals(java.util.Set.of("mall:product:list"), currentUser.getPermissions());
     }
 
     @Test
@@ -64,14 +66,14 @@ class GatewayIdentityVerifierTest {
 
     @Test
     void rejectsLegacyEnvelopeVersion() {
-        String identity = sign(1, Instant.now().getEpochSecond(), "GET", "/mall/api/admin/products");
+        String identity = sign(2, Instant.now().getEpochSecond(), "GET", "/mall/api/admin/products");
 
         assertThrows(GatewayIdentityException.class,
                 () -> verifier.verify(identity, "GET", "/mall/api/admin/products"));
     }
 
     String sign(long issuedAt, String method, String path) {
-        return sign(2, issuedAt, method, path);
+        return sign(3, issuedAt, method, path);
     }
 
     private String sign(int version, long issuedAt, String method, String path) {
@@ -82,6 +84,7 @@ class GatewayIdentityVerifierTest {
             envelope.put("membershipId", "7");
             envelope.put("tenantId", "tenant-a");
             envelope.put("username", "alice");
+            envelope.put("permissions", List.of("mall:product:list"));
             envelope.put("issuedAt", issuedAt);
             envelope.put("method", method);
             envelope.put("path", path);
