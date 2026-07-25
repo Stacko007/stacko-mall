@@ -1,31 +1,29 @@
-# Phase2 Smoke Scripts
+# 商城冒烟测试
 
-## Files
-- `scripts/smoke/.env.example`: environment variables template
-- `scripts/smoke/phase2_payment_after_sales.sh`: payment + after-sales smoke script
+## 准备
 
-## Quick Start
-1. Copy env template:
-   ```bash
-   cp scripts/smoke/.env.example scripts/smoke/.env
-   ```
-2. Fill token/product fields in `scripts/smoke/.env`
-3. Run:
-   ```bash
-   bash scripts/smoke/phase2_payment_after_sales.sh
-   ```
+```bash
+cp scripts/smoke/.env.example scripts/smoke/.env
+```
 
-## Covered Flow
-1. Create order
-2. Pay order
-3. Payment callback + callback replay idempotency
-4. Admin query payment
-5. C apply after-sales
-6. Admin review approve
-7. Admin refund
-8. C query after-sales
+填写租户、Token、商品和支付回调密钥。`BASE_URL` 必须指向 Gateway 的商城路由，默认是：
 
-## Notes
-- The script requires `openssl` for callback signature generation.
-- Keep `CALLBACK_SECRET` aligned with `payment.mock.callback-secret` in mall bootstrap config.
-- For idempotency test consistency, script generates unique keys by timestamp.
+```text
+http://localhost:8088/mall
+```
+
+## 支付与售后
+
+```bash
+bash scripts/smoke/payment_after_sales.sh
+```
+
+覆盖下单、支付、回调幂等、支付查询、售后申请、审核、退款和查询。脚本依赖 `curl` 与 `openssl`。
+
+## TraceId
+
+```bash
+bash scripts/smoke/traceid_check.sh
+```
+
+验证公开、未认证和已认证请求都返回 `X-Request-Id`。日志中的同一请求应使用相同 traceId。
