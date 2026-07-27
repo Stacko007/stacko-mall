@@ -1,5 +1,6 @@
-import { Button, Layout, Menu, Space } from 'antd';
-import { Link, Route, Routes, useLocation } from 'react-router-dom';
+import { Button, Layout, Menu, Space, Spin } from 'antd';
+import { Link, Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import Home from './pages/Home';
 import Category from './pages/Category';
 import Cart from './pages/Cart';
@@ -15,6 +16,7 @@ import Payment from './pages/Payment';
 import PaymentResult from './pages/PaymentResult';
 import OrderDetail from './pages/OrderDetail';
 import { session } from './store/session';
+import { api, UserSession } from './services/api';
 import './App.css';
 
 const { Header, Content, Footer } = Layout;
@@ -32,6 +34,50 @@ const navItems = [
 export default function App() {
   const location = useLocation();
   const pathname = location.pathname;
+  const [portalSession, setPortalSession] = useState<UserSession | null>(null);
+  const [checkingSession, setCheckingSession] = useState(Boolean(session.getToken()));
+
+  useEffect(() => {
+    if (!session.getToken()) {
+      setCheckingSession(false);
+      setPortalSession(null);
+      return;
+    }
+    if (
+      portalSession?.portalCode === 'stacko-mall-web' &&
+      portalSession?.audience === 'stacko-mall-web'
+    ) {
+      setCheckingSession(false);
+      return;
+    }
+    setCheckingSession(true);
+    api.currentSession()
+      .then((response) => {
+        const current = response.data.data;
+        if (
+          !response.data.success ||
+          current?.portalCode !== 'stacko-mall-web' ||
+          current?.audience !== 'stacko-mall-web'
+        ) {
+          throw new Error('Portal access denied');
+        }
+        session.setProfile(current);
+        setPortalSession(current);
+      })
+      .catch(() => {
+        session.clearAll();
+        setPortalSession(null);
+      })
+      .finally(() => setCheckingSession(false));
+  }, [pathname, portalSession]);
+
+  const protectedPage = (page: React.ReactNode) => {
+    if (checkingSession) return <Spin />;
+    if (!portalSession) {
+      return <Navigate to={`/login?redirect=${encodeURIComponent(pathname)}`} replace />;
+    }
+    return page;
+  };
   const selectedKey = (() => {
     if (pathname === '/') return '/';
     if (pathname.startsWith('/category')) return '/category';
@@ -86,13 +132,13 @@ export default function App() {
           <Route path="/search" element={<Search />} />
           <Route path="/products" element={<ProductList />} />
           <Route path="/products/:id" element={<ProductDetail />} />
-          <Route path="/confirm" element={<ConfirmOrder />} />
-          <Route path="/payment/:id" element={<Payment />} />
-          <Route path="/payment-result/:id" element={<PaymentResult />} />
+          <Route path="/confirm" element={protectedPage(<ConfirmOrder />)} />
+          <Route path="/payment/:id" element={protectedPage(<Payment />)} />
+          <Route path="/payment-result/:id" element={protectedPage(<PaymentResult />)} />
           <Route path="/cart" element={<Cart />} />
-          <Route path="/orders" element={<Orders />} />
-          <Route path="/orders/:id" element={<OrderDetail />} />
-          <Route path="/profile" element={<Profile />} />
+          <Route path="/orders" element={protectedPage(<Orders />)} />
+          <Route path="/orders/:id" element={protectedPage(<OrderDetail />)} />
+          <Route path="/profile" element={protectedPage(<Profile />)} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
         </Routes>

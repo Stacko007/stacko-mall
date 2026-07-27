@@ -12,6 +12,7 @@ export type LoginRequest = {
   password: string;
   tenantId: string;
   withRefresh?: boolean;
+  portalCode?: string;
 };
 
 export type AuthToken = {
@@ -21,6 +22,21 @@ export type AuthToken = {
   refreshExpiresAt?: string;
   userId?: number;
   tenantId?: string;
+  applicationCode?: string;
+  portalCode?: string;
+  audience?: string;
+};
+
+export type UserSession = {
+  accountId: number;
+  membershipId: number;
+  username: string;
+  tenantId: string;
+  applicationCode: string;
+  portalCode: string;
+  audience: string;
+  roles: string[];
+  permissions: string[];
 };
 
 export type ProductStatus = 'DRAFT' | 'ACTIVE' | 'INACTIVE';
@@ -131,7 +147,12 @@ export type AfterSales = {
 
 export const adminApi = {
   login: (payload: LoginRequest) =>
-    userHttp.post<ApiResponse<AuthToken>>('/auth/login', payload),
+    userHttp.post<ApiResponse<AuthToken>>('/auth/login', {
+      ...payload,
+      portalCode: 'stacko-mall-admin'
+    }),
+  currentSession: () =>
+    userHttp.get<ApiResponse<UserSession>>('/users/me'),
 
   listProducts: () => http.get<ApiResponse<Product[]>>('/admin/products'),
   getProduct: (id: string) =>
@@ -182,7 +203,10 @@ export const adminApi = {
 
 export const api = {
   login: (payload: LoginRequest) =>
-    userHttp.post<ApiResponse<AuthToken>>('/auth/login', payload),
+    userHttp.post<ApiResponse<AuthToken>>('/auth/login', {
+      ...payload,
+      portalCode: 'stacko-mall-web'
+    }),
 
   getProducts: () => http.get<ApiResponse<Product[]>>('/c/products'),
 

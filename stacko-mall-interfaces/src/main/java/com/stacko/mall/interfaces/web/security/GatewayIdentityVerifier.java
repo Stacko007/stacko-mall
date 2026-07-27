@@ -48,6 +48,9 @@ public class GatewayIdentityVerifier {
                     parseId(envelope.membershipId()),
                     envelope.username(),
                     envelope.tenantId(),
+                    envelope.applicationCode(),
+                    envelope.portalCode(),
+                    envelope.audience(),
                     Set.copyOf(envelope.permissions()));
         } catch (GatewayIdentityException e) {
             throw e;
@@ -57,10 +60,13 @@ public class GatewayIdentityVerifier {
     }
 
     private void validate(IdentityEnvelope envelope, String method, String gatewayPath) {
-        if (envelope.version() != 3
+        if (envelope.version() != 4
                 || !hasText(envelope.accountId())
                 || !hasText(envelope.membershipId())
                 || !hasText(envelope.tenantId())
+                || !hasText(envelope.applicationCode())
+                || !hasText(envelope.portalCode())
+                || !hasText(envelope.audience())
                 || envelope.permissions() == null
                 || envelope.permissions().stream().anyMatch(permission -> !hasText(permission))
                 || !method.equalsIgnoreCase(envelope.method())
@@ -110,6 +116,9 @@ public class GatewayIdentityVerifier {
             String membershipId,
             String tenantId,
             String username,
+            String applicationCode,
+            String portalCode,
+            String audience,
             List<String> permissions,
             long issuedAt,
             String method,

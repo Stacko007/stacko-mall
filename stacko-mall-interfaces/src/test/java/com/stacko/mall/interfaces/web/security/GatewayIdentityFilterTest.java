@@ -63,6 +63,29 @@ class GatewayIdentityFilterTest {
     }
 
     @Test
+    void adminPortalCannotCallCustomerApiAndCustomerPortalCannotCallAdminApi() throws Exception {
+        MockHttpServletRequest customerRequest = request("GET", "/api/c/orders");
+        customerRequest.addHeader("X-Tenant-ID", "tenant-a");
+        customerRequest.addHeader(GatewayIdentityVerifier.IDENTITY_HEADER,
+                signer.signForPortal(Instant.now().getEpochSecond(), "GET", "/mall/api/c/orders",
+                        "stacko-mall-admin", "stacko-mall-admin"));
+        MockHttpServletResponse customerResponse = new MockHttpServletResponse();
+
+        filter.doFilter(customerRequest, customerResponse, unusedChain());
+        assertEquals(403, customerResponse.getStatus());
+
+        MockHttpServletRequest adminRequest = request("GET", "/api/admin/products");
+        adminRequest.addHeader("X-Tenant-ID", "tenant-a");
+        adminRequest.addHeader(GatewayIdentityVerifier.IDENTITY_HEADER,
+                signer.signForPortal(Instant.now().getEpochSecond(), "GET", "/mall/api/admin/products",
+                        "stacko-mall-web", "stacko-mall-web"));
+        MockHttpServletResponse adminResponse = new MockHttpServletResponse();
+
+        filter.doFilter(adminRequest, adminResponse, unusedChain());
+        assertEquals(403, adminResponse.getStatus());
+    }
+
+    @Test
     void identityCannotBeReplayedToAnotherPath() throws Exception {
         MockHttpServletRequest request = request("GET", "/api/admin/orders");
         request.addHeader("X-Tenant-ID", "tenant-a");

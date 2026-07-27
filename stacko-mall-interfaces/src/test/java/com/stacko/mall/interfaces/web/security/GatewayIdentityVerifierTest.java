@@ -30,6 +30,7 @@ class GatewayIdentityVerifierTest {
         assertEquals(3L, currentUser.getAccountId());
         assertEquals(7L, currentUser.getId());
         assertEquals("tenant-a", currentUser.getTenantId());
+        assertEquals("stacko-mall-admin", currentUser.getAudience());
         assertEquals(java.util.Set.of("mall:product:list"), currentUser.getPermissions());
     }
 
@@ -73,10 +74,19 @@ class GatewayIdentityVerifierTest {
     }
 
     String sign(long issuedAt, String method, String path) {
-        return sign(3, issuedAt, method, path);
+        return sign(4, issuedAt, method, path, "stacko-mall-admin", "stacko-mall-admin");
+    }
+
+    String signForPortal(long issuedAt, String method, String path, String portalCode, String audience) {
+        return sign(4, issuedAt, method, path, portalCode, audience);
     }
 
     private String sign(int version, long issuedAt, String method, String path) {
+        return sign(version, issuedAt, method, path, "stacko-mall-admin", "stacko-mall-admin");
+    }
+
+    private String sign(int version, long issuedAt, String method, String path,
+                        String portalCode, String audience) {
         try {
             Map<String, Object> envelope = new LinkedHashMap<>();
             envelope.put("version", version);
@@ -84,6 +94,9 @@ class GatewayIdentityVerifierTest {
             envelope.put("membershipId", "7");
             envelope.put("tenantId", "tenant-a");
             envelope.put("username", "alice");
+            envelope.put("applicationCode", "stacko-mall");
+            envelope.put("portalCode", portalCode);
+            envelope.put("audience", audience);
             envelope.put("permissions", List.of("mall:product:list"));
             envelope.put("issuedAt", issuedAt);
             envelope.put("method", method);

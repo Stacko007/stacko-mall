@@ -39,12 +39,22 @@
 
 | 变量 | 说明 | 要求 |
 | --- | --- | --- |
-| `STACKO_GATEWAY_IDENTITY_SECRET` | Gateway V3 身份签名密钥 | 与所有 Gateway 实例一致，生产至少 32 字符 |
+| `STACKO_GATEWAY_IDENTITY_SECRET` | Gateway V4 身份签名密钥 | 与所有 Gateway 实例一致，生产至少 32 字符 |
 | `STACKO_MALL_GATEWAY_IDENTITY_MAX_AGE` | 身份头最大年龄 | `30s` |
 | `STACKO_MALL_GATEWAY_IDENTITY_CLOCK_SKEW` | 允许时钟偏差 | `5s` |
 | `STACKO_MALL_PAYMENT_CALLBACK_SECRET` | 模拟支付回调密钥 | 生产至少 32 字符 |
 
 身份签名密钥应由 Gateway 的密钥工具生成并通过 Secret 管理。商城不需要 Redis 和 Sa-Token 环境变量。
+
+商城固定校验：
+
+```text
+applicationCode = stacko-mall
+管理端 portalCode/audience = stacko-mall-admin
+用户端 portalCode/audience = stacko-mall-web
+```
+
+这些值是服务安全边界，不是前端可选参数。
 
 ## 3. 订单超时任务
 
@@ -104,6 +114,10 @@ VITE_GATEWAY_TARGET=http://127.0.0.1:18088 npm run dev
 ```
 
 前端不能直接连接商城 `8081` 或用户中心 `8080`。
+
+管理端和用户端使用不同的 Local Storage 键。登录请求分别固定携带
+`stacko-mall-admin` 和 `stacko-mall-web`，并通过 `/user/api/users/me` 再次确认门户
+和 audience。
 
 ## 6. 生产校验
 

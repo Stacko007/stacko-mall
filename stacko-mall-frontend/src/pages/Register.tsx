@@ -11,7 +11,7 @@ export default function Register() {
 
   const onFinish = async (values: RegisterRequest) => {
     try {
-      const resp = await api.register(values);
+      const resp = await api.register({ ...values, portalCode: 'stacko-mall-web' });
       if (!resp.data.success) {
         message.error(resp.data.message || '注册失败');
         return;
@@ -28,6 +28,25 @@ export default function Register() {
       } else if (values.tenantId) {
         session.setTenantId(values.tenantId);
       }
+      if (
+        resp.data.data?.portalCode !== 'stacko-mall-web' ||
+        resp.data.data?.audience !== 'stacko-mall-web'
+      ) {
+        session.clearAll();
+        message.error('当前账号无权访问商城用户端');
+        return;
+      }
+      const current = await api.currentSession();
+      if (
+        !current.data.success ||
+        current.data.data?.portalCode !== 'stacko-mall-web' ||
+        current.data.data?.audience !== 'stacko-mall-web'
+      ) {
+        session.clearAll();
+        message.error('当前账号无权访问商城用户端');
+        return;
+      }
+      session.setProfile(current.data.data);
       message.success('注册成功');
       navigate('/');
     } catch (error) {

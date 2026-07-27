@@ -29,6 +29,11 @@ public class GatewayIdentityFilter extends OncePerRequestFilter {
     private final CurrentUserContext currentUserContext;
     private final ObjectMapper objectMapper;
     private final String gatewayPathPrefix;
+    private final String expectedApplicationCode;
+    private final String adminPortalCode;
+    private final String adminAudience;
+    private final String customerPortalCode;
+    private final String customerAudience;
     private final List<PathPattern> protectedPaths;
 
     public GatewayIdentityFilter(GatewayIdentityVerifier verifier,
@@ -39,6 +44,11 @@ public class GatewayIdentityFilter extends OncePerRequestFilter {
         this.currentUserContext = currentUserContext;
         this.objectMapper = objectMapper;
         this.gatewayPathPrefix = normalizePrefix(properties.getGatewayPathPrefix());
+        this.expectedApplicationCode = properties.getExpectedApplicationCode();
+        this.adminPortalCode = properties.getAdminPortalCode();
+        this.adminAudience = properties.getAdminAudience();
+        this.customerPortalCode = properties.getCustomerPortalCode();
+        this.customerAudience = properties.getCustomerAudience();
         PathPatternParser parser = new PathPatternParser();
         this.protectedPaths = properties.getProtectedPaths().stream().map(parser::parse).toList();
     }
@@ -66,6 +76,7 @@ public class GatewayIdentityFilter extends OncePerRequestFilter {
             if (tenantId == null || !tenantId.equals(currentUser.getTenantId())) {
                 throw GatewayIdentityException.forbidden();
             }
+            validatePortal(request.getRequestURI(), currentUser);
             currentUserContext.bind(request, currentUser);
             filterChain.doFilter(request, response);
         } catch (GatewayIdentityException e) {
@@ -76,6 +87,25 @@ public class GatewayIdentityFilter extends OncePerRequestFilter {
     private boolean isProtected(String path) {
         PathContainer container = PathContainer.parsePath(path);
         return protectedPaths.stream().anyMatch(pattern -> pattern.matches(container));
+    }
+
+    private void validatePortal(String path, CurrentUser currentUser) {
+        if (!expectedApplicationCode.equals(currentUser.getApplicationCode())) {
+            throw GatewayIdentityException.forbidden();
+        }
+        if (path.equals("/api/admin") || path.startsWith("/api/admin/")) {
+            requirePortal(currentUser, adminPortalCode, adminAudience);
+            return;
+        }
+        if (path.equals("/api/c") || path.startsWith("/api/c/")) {
+            requirePortal(currentUser, customerPortalCode, customerAudience);
+        }
+    }
+
+    private void requirePortal(CurrentUser currentUser, String portalCode, String audience) {
+        if (!portalCode.equals(currentUser.getPortalCode()) || !audience.equals(currentUser.getAudience())) {
+            throw GatewayIdentityException.forbidden();
+        }
     }
 
     private String normalizePrefix(String prefix) {

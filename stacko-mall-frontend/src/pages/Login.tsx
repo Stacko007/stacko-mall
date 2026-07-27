@@ -12,7 +12,7 @@ export default function Login() {
 
   const onFinish = async (values: LoginRequest) => {
     try {
-      const resp = await api.login(values);
+      const resp = await api.login({ ...values, portalCode: 'stacko-mall-web' });
       if (!resp.data.success) {
         message.error(resp.data.message || '登录失败');
         return;
@@ -27,6 +27,25 @@ export default function Login() {
       if (resp.data.data?.tenantId) {
         session.setTenantId(resp.data.data.tenantId);
       }
+      if (
+        resp.data.data?.portalCode !== 'stacko-mall-web' ||
+        resp.data.data?.audience !== 'stacko-mall-web'
+      ) {
+        session.clearAll();
+        message.error('当前账号无权访问商城用户端');
+        return;
+      }
+      const current = await api.currentSession();
+      if (
+        !current.data.success ||
+        current.data.data?.portalCode !== 'stacko-mall-web' ||
+        current.data.data?.audience !== 'stacko-mall-web'
+      ) {
+        session.clearAll();
+        message.error('当前账号无权访问商城用户端');
+        return;
+      }
+      session.setProfile(current.data.data);
       message.success('登录成功');
       const params = new URLSearchParams(location.search);
       const redirect = params.get('redirect');

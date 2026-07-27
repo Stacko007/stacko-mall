@@ -28,7 +28,8 @@ flowchart LR
     MALL -. "注册实例" .-> NACOS
 ```
 
-所有外部请求从 Gateway 进入。Gateway 验证 Bearer Token 后生成 `X-Stacko-Identity`，商城只接受校验通过的身份。
+所有外部请求从 Gateway 进入。Gateway 验证 Bearer Token 后生成 `X-Stacko-Identity`
+V4，商城只接受校验通过且属于当前商城门户的身份。
 
 ## 3. 分层结构
 
@@ -55,9 +56,9 @@ sequenceDiagram
 
     C->>G: Bearer Token + X-Tenant-ID
     G->>G: 解析认证 Session
-    G->>G: V3 HMAC 签名身份
+    G->>G: V4 HMAC 签名身份
     G->>F: 转发请求，移除 Authorization
-    F->>F: 校验签名、时效、method、path、tenant
+    F->>F: 校验签名、时效、method、path、tenant、application、portal、audience
     F->>P: 绑定 CurrentUserContext
     P->>P: 检查 @RequiresPermission
     P->>S: 执行业务用例
@@ -65,6 +66,12 @@ sequenceDiagram
 ```
 
 `GatewayIdentityFilter` 负责认证身份的真实性，`PermissionAspect` 负责方法所需权限。二者职责不同，缺一不可。
+
+门户边界：
+
+- `/api/admin/**` 只接受 `stacko-mall-admin` 门户和 audience。
+- `/api/c/**` 的受保护接口只接受 `stacko-mall-web` 门户和 audience。
+- 两类会话即使属于同一账号、同一租户，也不能跨端调用。
 
 受保护前缀默认为：
 
@@ -78,7 +85,8 @@ Gateway 不再维护 URL 到业务权限码的映射。新增功能只需在商�
 
 ## 5. 多租户规则
 
-- Gateway 身份中包含 `tenantId`、`accountId` 和 `membershipId`。
+- Gateway 身份中包含 `tenantId`、`accountId`、`membershipId`、`applicationCode`、
+  `portalCode` 和 `audience`。
 - 请求的 `X-Tenant-ID` 必须与签名身份租户一致。
 - 商城主表必须包含 `tenant_id`，仓储查询必须带租户条件。
 - `buyer_id` 等主体引用不能替代 `tenant_id`。
@@ -120,6 +128,8 @@ flowchart LR
 - `mall:afterSales:read/review/refund`
 
 权限定义保存于用户中心数据库。种子 SQL 见 `docs/database/seed-mall-admin-permissions.sql`。
+门户准入另使用 `portal:stacko-mall-admin:access` 和
+`portal:stacko-mall-web:access`，它们不替代上述功能权限。
 
 ## 8. 当前遗留点
 
@@ -132,3 +142,4 @@ flowchart LR
 7. **事件可靠性**：订单、支付、售后之间尚无 Outbox 或消息最终一致性方案。
 8. **生产韧性**：尚缺限流、熔断、业务指标告警、压测基线和完整灾备演练。
 9. **端口隔离**：商城服务端口必须只允许 Gateway 和运维网络访问。
+10. **门户管理**：租户应用启用和门户定义当前在用户中心通过迁移 SQL 管理，尚无平台维护界面。

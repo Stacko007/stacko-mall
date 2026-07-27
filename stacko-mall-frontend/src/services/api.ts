@@ -12,12 +12,14 @@ export type LoginRequest = {
   password: string;
   tenantId: string;
   withRefresh?: boolean;
+  portalCode?: string;
 };
 
 export type RegisterRequest = {
   username: string;
   password: string;
   tenantId: string;
+  portalCode?: string;
   phone?: string;
   email?: string;
 };
@@ -29,6 +31,21 @@ export type AuthToken = {
   refreshExpiresAt?: string;
   userId?: number;
   tenantId?: string;
+  applicationCode?: string;
+  portalCode?: string;
+  audience?: string;
+};
+
+export type UserSession = {
+  accountId: number;
+  membershipId: number;
+  username: string;
+  tenantId: string;
+  applicationCode: string;
+  portalCode: string;
+  audience: string;
+  roles: string[];
+  permissions: string[];
 };
 
 export type Product = {
@@ -91,10 +108,19 @@ export type PaymentCallbackRequest = {
 
 export const api = {
   login: (payload: LoginRequest) =>
-    userHttp.post<ApiResponse<AuthToken>>('/auth/login', payload),
+    userHttp.post<ApiResponse<AuthToken>>('/auth/login', {
+      ...payload,
+      portalCode: 'stacko-mall-web'
+    }),
 
   register: (payload: RegisterRequest) =>
-    userHttp.post<ApiResponse<AuthToken>>('/auth/register', payload),
+    userHttp.post<ApiResponse<AuthToken>>('/auth/register', {
+      ...payload,
+      portalCode: 'stacko-mall-web'
+    }),
+
+  currentSession: () =>
+    userHttp.get<ApiResponse<UserSession>>('/users/me'),
 
   getProducts: () => http.get<ApiResponse<Product[]>>('/c/products'),
 

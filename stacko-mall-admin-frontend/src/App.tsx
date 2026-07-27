@@ -1,4 +1,4 @@
-import { Button, Layout, Menu, Space, Tabs, Tag, Typography } from 'antd';
+import { Button, Layout, Menu, Space, Spin, Tabs, Tag, Typography } from 'antd';
 import {
   Link,
   Navigate,
@@ -17,6 +17,7 @@ import Stocks from './pages/Stocks';
 import AfterSales from './pages/AfterSales';
 import Payments from './pages/Payments';
 import Login from './pages/Login';
+import { adminApi, UserSession } from './services/api';
 import { session } from './store/session';
 import './App.css';
 
@@ -25,11 +26,11 @@ const { Text } = Typography;
 
 const navItems = [
   { key: '/admin', label: '仪表盘' },
-  { key: '/admin/products', label: '商品管理' },
-  { key: '/admin/orders', label: '订单管理' },
-  { key: '/admin/stocks', label: '库存管理' },
-  { key: '/admin/after-sales', label: '售后管理' },
-  { key: '/admin/payments', label: '支付查询' }
+  { key: '/admin/products', label: '商品管理', permission: 'mall:product:list' },
+  { key: '/admin/orders', label: '订单管理', permission: 'mall:order:list' },
+  { key: '/admin/stocks', label: '库存管理', permission: 'mall:stock:list' },
+  { key: '/admin/after-sales', label: '售后管理', permission: 'mall:afterSales:read' },
+  { key: '/admin/payments', label: '支付查询', permission: 'mall:payment:read' }
 ];
 
 type TabItem = {
@@ -38,19 +39,56 @@ type TabItem = {
   closable?: boolean;
 };
 
-function RequireAuth({ children }: { children: React.ReactNode }) {
-  const token = session.getToken();
-  if (!token) {
-    return <Navigate to="/login" replace />;
-  }
-  return <>{children}</>;
-}
+const permissionForPath = (path: string) => {
+  if (matchPath('/admin/orders/:id', path)) return 'mall:order:read';
+  return navItems.find((item) => item.key === path)?.permission;
+};
 
 export default function App() {
   const location = useLocation();
   const navigate = useNavigate();
   const pathname = location.pathname;
   const isLogin = pathname.startsWith('/login');
+  const [portalSession, setPortalSession] = useState<UserSession | null>(
+    () => session.getProfile<UserSession>()
+  );
+  const [checkingSession, setCheckingSession] = useState(!isLogin && Boolean(session.getToken()));
+
+  useEffect(() => {
+    if (isLogin || !session.getToken()) {
+      setCheckingSession(false);
+      return;
+    }
+    setCheckingSession(true);
+    adminApi.currentSession()
+      .then((response) => {
+        const current = response.data.data;
+        if (
+          !response.data.success ||
+          current?.portalCode !== 'stacko-mall-admin' ||
+          current?.audience !== 'stacko-mall-admin'
+        ) {
+          throw new Error('Portal access denied');
+        }
+        session.setProfile(current);
+        setPortalSession(current);
+      })
+      .catch(() => {
+        session.clearAll();
+        setPortalSession(null);
+      })
+      .finally(() => setCheckingSession(false));
+  }, [isLogin]);
+
+  const allowedNavItems = useMemo(
+    () => navItems.filter((item) =>
+      !item.permission || portalSession?.permissions?.includes(item.permission)
+    ),
+    [portalSession]
+  );
+
+  const allowed = (permission?: string) =>
+    !permission || Boolean(portalSession?.permissions?.includes(permission));
 
   const selectedKey = (() => {
     if (pathname === '/admin') return '/admin';
@@ -64,7 +102,7 @@ export default function App() {
 
   const getTabLabel = (path: string) => {
     if (matchPath('/admin/orders/:id', path)) return '订单详情';
-    const hit = navItems.find((item) => item.key === path);
+    const hit = allowedNavItems.find((item) => item.key === path);
     return hit?.label || '页面';
   };
 
@@ -110,14 +148,19 @@ export default function App() {
     });
   }, [isLogin, pathname]);
 
+  const visibleTabs = useMemo(
+    () => tabs.filter((tab) => allowed(permissionForPath(tab.key))),
+    [tabs, portalSession]
+  );
+
   const tabItems = useMemo(
     () =>
-      tabs.map((tab) => ({
+      visibleTabs.map((tab) => ({
         key: tab.key,
         label: tab.label,
         closable: tab.closable !== false
       })),
-    [tabs]
+    [visibleTabs]
   );
 
   const onTabChange = (key: string) => {
@@ -140,8 +183,8 @@ export default function App() {
   };
 
   const activeTabKey =
-    tabs.find((item) => item.key === pathname)?.key ||
-    tabs[0]?.key ||
+    visibleTabs.find((item) => item.key === pathname)?.key ||
+    visibleTabs[0]?.key ||
     '/admin';
 
   if (isLogin) {
@@ -153,8 +196,19 @@ export default function App() {
     );
   }
 
+  if (!session.getToken()) {
+    return <Navigate to={`/login?redirect=${encodeURIComponent(pathname)}`} replace />;
+  }
+
+  if (checkingSession) {
+    return <Spin fullscreen />;
+  }
+
+  if (!portalSession) {
+    return <Navigate to="/login?denied=1" replace />;
+  }
+
   return (
-    <RequireAuth>
       <Layout className="app-layout">
         <Sider
           breakpoint="lg"
@@ -167,7 +221,7 @@ export default function App() {
             theme="dark"
             mode="inline"
             selectedKeys={[selectedKey]}
-            items={navItems.map((item) => ({
+            items={allowedNavItems.map((item) => ({
               key: item.key,
               label: <Link to={item.key}>{item.label}</Link>
             }))}
@@ -206,17 +260,16 @@ export default function App() {
             <Routes>
               <Route path="/" element={<Navigate to="/admin" replace />} />
               <Route path="/admin" element={<Dashboard />} />
-              <Route path="/admin/products" element={<Products />} />
-              <Route path="/admin/orders" element={<Orders />} />
-              <Route path="/admin/orders/:id" element={<OrderDetail />} />
-              <Route path="/admin/stocks" element={<Stocks />} />
-              <Route path="/admin/after-sales" element={<AfterSales />} />
-              <Route path="/admin/payments" element={<Payments />} />
+              <Route path="/admin/products" element={allowed('mall:product:list') ? <Products /> : <Navigate to="/admin" replace />} />
+              <Route path="/admin/orders" element={allowed('mall:order:list') ? <Orders /> : <Navigate to="/admin" replace />} />
+              <Route path="/admin/orders/:id" element={allowed('mall:order:read') ? <OrderDetail /> : <Navigate to="/admin" replace />} />
+              <Route path="/admin/stocks" element={allowed('mall:stock:list') ? <Stocks /> : <Navigate to="/admin" replace />} />
+              <Route path="/admin/after-sales" element={allowed('mall:afterSales:read') ? <AfterSales /> : <Navigate to="/admin" replace />} />
+              <Route path="/admin/payments" element={allowed('mall:payment:read') ? <Payments /> : <Navigate to="/admin" replace />} />
               <Route path="*" element={<Navigate to="/admin" replace />} />
             </Routes>
           </Content>
         </Layout>
       </Layout>
-    </RequireAuth>
   );
 }

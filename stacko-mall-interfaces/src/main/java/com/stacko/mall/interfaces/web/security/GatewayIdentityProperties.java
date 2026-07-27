@@ -22,6 +22,16 @@ public class GatewayIdentityProperties {
     private Duration allowedClockSkew = Duration.ofSeconds(5);
     @NotBlank
     private String gatewayPathPrefix = "/mall";
+    @NotBlank
+    private String expectedApplicationCode = "stacko-mall";
+    @NotBlank
+    private String adminPortalCode = "stacko-mall-admin";
+    @NotBlank
+    private String adminAudience = "stacko-mall-admin";
+    @NotBlank
+    private String customerPortalCode = "stacko-mall-web";
+    @NotBlank
+    private String customerAudience = "stacko-mall-web";
     @Size(min = 1)
     private List<String> protectedPaths = new ArrayList<>();
 
@@ -63,5 +73,45 @@ public class GatewayIdentityProperties {
 
     public void setProtectedPaths(List<String> protectedPaths) {
         this.protectedPaths = protectedPaths == null ? new ArrayList<>() : new ArrayList<>(protectedPaths);
+    }
+
+    public String getExpectedApplicationCode() {
+        return expectedApplicationCode;
+    }
+
+    public void setExpectedApplicationCode(String expectedApplicationCode) {
+        this.expectedApplicationCode = expectedApplicationCode;
+    }
+
+    public String getAdminPortalCode() {
+        return adminPortalCode;
+    }
+
+    public void setAdminPortalCode(String adminPortalCode) {
+        this.adminPortalCode = adminPortalCode;
+    }
+
+    public String getAdminAudience() {
+        return adminAudience;
+    }
+
+    public void setAdminAudience(String adminAudience) {
+        this.adminAudience = adminAudience;
+    }
+
+    public String getCustomerPortalCode() {
+        return customerPortalCode;
+    }
+
+    public void setCustomerPortalCode(String customerPortalCode) {
+        this.customerPortalCode = customerPortalCode;
+    }
+
+    public String getCustomerAudience() {
+        return customerAudience;
+    }
+
+    public void setCustomerAudience(String customerAudience) {
+        this.customerAudience = customerAudience;
     }
 }

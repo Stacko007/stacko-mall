@@ -29,6 +29,11 @@ stacko:
       max-age: ${STACKO_MALL_GATEWAY_IDENTITY_MAX_AGE:30s}
       allowed-clock-skew: ${STACKO_MALL_GATEWAY_IDENTITY_CLOCK_SKEW:5s}
       gateway-path-prefix: /mall
+      expected-application-code: stacko-mall
+      admin-portal-code: stacko-mall-admin
+      admin-audience: stacko-mall-admin
+      customer-portal-code: stacko-mall-web
+      customer-audience: stacko-mall-web
       protected-paths:
         - /api/admin/**
         - /api/c/orders/**
