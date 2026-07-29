@@ -20,6 +20,9 @@ export default function Register() {
       if (token) {
         session.setToken(token);
       }
+      if (resp.data.data?.refreshToken) {
+        session.setRefreshToken(resp.data.data.refreshToken);
+      }
       if (resp.data.data?.userId) {
         session.setBuyerId(String(resp.data.data.userId));
       }

@@ -8,7 +8,7 @@ import {
   useLocation,
   useNavigate
 } from 'react-router-dom';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Dashboard from './pages/Dashboard';
 import Products from './pages/Products';
 import Orders from './pages/Orders';
@@ -53,9 +53,22 @@ export default function App() {
     () => session.getProfile<UserSession>()
   );
   const [checkingSession, setCheckingSession] = useState(!isLogin && Boolean(session.getToken()));
+  const freshlyAuthenticated = useRef(false);
+
+  const handleAuthenticated = (current: UserSession) => {
+    session.setProfile(current);
+    freshlyAuthenticated.current = true;
+    setPortalSession(current);
+    setCheckingSession(false);
+  };
 
   useEffect(() => {
     if (isLogin || !session.getToken()) {
+      setCheckingSession(false);
+      return;
+    }
+    if (freshlyAuthenticated.current && portalSession) {
+      freshlyAuthenticated.current = false;
       setCheckingSession(false);
       return;
     }
@@ -190,7 +203,7 @@ export default function App() {
   if (isLogin) {
     return (
       <Routes>
-        <Route path="/login" element={<Login />} />
+        <Route path="/login" element={<Login onAuthenticated={handleAuthenticated} />} />
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     );

@@ -263,10 +263,10 @@ public class OrderApplicationService {
         for (OrderItem item : items) {
             Stock stock = stockRepository
                     .findByProductId(tenantId, item.getProductId())
-                    .orElseThrow(() -> new IllegalArgumentException("Stock not found"));
+                    .orElseThrow(() -> new IllegalArgumentException("商品库存不存在：" + item.getProductName()));
             int nextQuantity = stock.getQuantity() - item.getQuantity();
             if (nextQuantity < 0) {
-                throw new IllegalArgumentException("Insufficient stock");
+                throw new IllegalArgumentException("商品库存不足：" + item.getProductName());
             }
             stock.adjust(-item.getQuantity());
             stockRepository.save(stock);
@@ -277,7 +277,7 @@ public class OrderApplicationService {
         for (OrderItem item : items) {
             Stock stock = stockRepository
                     .findByProductId(tenantId, item.getProductId())
-                    .orElseThrow(() -> new IllegalArgumentException("Stock not found"));
+                    .orElseThrow(() -> new IllegalArgumentException("商品库存不存在：" + item.getProductName()));
             stock.adjust(item.getQuantity());
             stockRepository.save(stock);
         }

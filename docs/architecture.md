@@ -83,6 +83,16 @@ sequenceDiagram
 
 Gateway 不再维护 URL 到业务权限码的映射。新增功能只需在商城方法声明权限，并把权限码加入用户中心权限目录。
 
+用户中心通过全局 `up_application_permissions` 明确 `mall:*` 权限归属商城，并通过
+`up_portal_permission_scopes` 维护平台级门户策略。商城管理端 Token 只会收到
+`stacko-mall-admin` 范围内的商城权限，用户端 Token 只会收到 `stacko-mall-web` 范围内的权限；
+即使同一成员角色同时拥有两端权限，也不能通过另一端 Token 携带或使用它们。
+
+用户中心中的角色、权限目录或门户策略变化后，相关 access token 会失效，但 refresh token
+继续有效。商城管理端和用户端收到首次 `401` 时，会合并并发刷新请求，通过用户中心重新
+加载数据库中的最新角色、权限和门户范围，更新 Token 后重放原业务请求。只有门户准入被
+撤销、成员被停用等无法继续访问的情况才回到登录页。
+
 ## 5. 多租户规则
 
 - Gateway 身份中包含 `tenantId`、`accountId`、`membershipId`、`applicationCode`、
@@ -127,7 +137,8 @@ flowchart LR
 - `mall:payment:read`
 - `mall:afterSales:read/review/refund`
 
-权限定义保存于用户中心数据库。种子 SQL 见 `docs/database/seed-mall-admin-permissions.sql`。
+权限定义保存于用户中心数据库。新权限应由平台管理员在用户中心“应用管理”中维护，并
+配置到对应门户策略；种子 SQL 仅用于历史环境迁移和数据库重建。
 门户准入另使用 `portal:stacko-mall-admin:access` 和
 `portal:stacko-mall-web:access`，它们不替代上述功能权限。
 
@@ -142,4 +153,3 @@ flowchart LR
 7. **事件可靠性**：订单、支付、售后之间尚无 Outbox 或消息最终一致性方案。
 8. **生产韧性**：尚缺限流、熔断、业务指标告警、压测基线和完整灾备演练。
 9. **端口隔离**：商城服务端口必须只允许 Gateway 和运维网络访问。
-10. **门户管理**：租户应用启用和门户定义当前在用户中心通过迁移 SQL 管理，尚无平台维护界面。

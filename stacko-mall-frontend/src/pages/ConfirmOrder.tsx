@@ -69,7 +69,7 @@ export default function ConfirmOrder() {
         message.error(resp.data.message || '订单创建失败');
       }
     } catch (error) {
-      message.error('订单创建失败');
+      // global handler will notify
     }
   };
 

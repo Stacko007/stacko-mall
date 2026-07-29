@@ -1,11 +1,15 @@
 import { Button, Card, Form, Input, Typography, message } from 'antd';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { adminApi, LoginRequest } from '../services/api';
+import { adminApi, LoginRequest, UserSession } from '../services/api';
 import { session } from '../store/session';
 
 const { Title, Paragraph } = Typography;
 
-export default function Login() {
+type LoginProps = {
+  onAuthenticated: (current: UserSession) => void;
+};
+
+export default function Login({ onAuthenticated }: LoginProps) {
   const [form] = Form.useForm<LoginRequest>();
   const navigate = useNavigate();
   const location = useLocation();
@@ -20,6 +24,9 @@ export default function Login() {
       const token = resp.data.data?.token;
       if (token) {
         session.setToken(token);
+      }
+      if (resp.data.data?.refreshToken) {
+        session.setRefreshToken(resp.data.data.refreshToken);
       }
       if (resp.data.data?.userId) {
         session.setBuyerId(String(resp.data.data.userId));
@@ -45,7 +52,7 @@ export default function Login() {
         message.error('当前账号无权访问商城管理端');
         return;
       }
-      session.setProfile(current.data.data);
+      onAuthenticated(current.data.data);
       message.success('登录成功');
       const params = new URLSearchParams(location.search);
       const redirect = params.get('redirect');

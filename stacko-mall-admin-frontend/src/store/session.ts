@@ -1,4 +1,5 @@
 const TOKEN_KEY = 'stacko_mall_admin_token';
+const REFRESH_TOKEN_KEY = 'stacko_mall_admin_refresh_token';
 const BUYER_ID_KEY = 'stacko_mall_admin_membership_id';
 const TENANT_ID_KEY = 'stacko_mall_admin_tenant_id';
 const PROFILE_KEY = 'stacko_mall_admin_profile';
@@ -12,6 +13,12 @@ export const session = {
   },
   clearToken() {
     localStorage.removeItem(TOKEN_KEY);
+  },
+  getRefreshToken() {
+    return localStorage.getItem(REFRESH_TOKEN_KEY) || '';
+  },
+  setRefreshToken(refreshToken: string) {
+    localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
   },
   getBuyerId() {
     return localStorage.getItem(BUYER_ID_KEY) || '';
@@ -39,6 +46,7 @@ export const session = {
   },
   clearAll() {
     localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(REFRESH_TOKEN_KEY);
     localStorage.removeItem(BUYER_ID_KEY);
     localStorage.removeItem(TENANT_ID_KEY);
     localStorage.removeItem(PROFILE_KEY);

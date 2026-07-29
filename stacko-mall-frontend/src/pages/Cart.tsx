@@ -10,6 +10,7 @@ const { Title, Paragraph } = Typography;
 
 export default function Cart() {
   const [items, setItems] = useState<CartItem[]>(cartStore.list());
+  const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
 
   const allSelected = useMemo(
@@ -38,6 +39,7 @@ export default function Cart() {
       message.warning('请选择商品');
       return;
     }
+    setSubmitting(true);
     try {
       const resp = await api.createOrder(
         {
@@ -61,6 +63,8 @@ export default function Cart() {
       }
     } catch (error) {
       // global handler will notify
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -124,7 +128,7 @@ export default function Cart() {
             全选
           </Checkbox>
           <Paragraph style={{ marginBottom: 0 }}>合计：¥ {total}</Paragraph>
-          <Button type="primary" onClick={handleSubmit}>
+          <Button type="primary" loading={submitting} onClick={handleSubmit}>
             去结算
           </Button>
         </Space>
