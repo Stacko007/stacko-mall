@@ -6,7 +6,8 @@ Stacko Mall 是接入 Stacko 用户中心的多租户商城业务服务，负责
 
 - [架构设计](docs/architecture.md)：业务边界、请求安全链和数据流
 - [配置与启动](docs/configuration.md)：环境变量、Profile、双实例和双前端
-- [数据库说明](docs/database.md)：表职责、建库和权限种子
+- [数据库说明](docs/database.md)：表职责、建库和变更规则
+- [待完善事项](docs/roadmap.md)：上线前必须完成和后续演进项
 - [冒烟测试](scripts/smoke/README.md)
 
 ## 工程结构
