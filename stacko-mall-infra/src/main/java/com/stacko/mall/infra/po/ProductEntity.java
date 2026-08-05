@@ -16,6 +16,7 @@ public class ProductEntity {
     @TableId
     private String id;
     private String tenantId;
+    private String categoryId;
     private String name;
     private String description;
     private BigDecimal price;
@@ -27,6 +28,7 @@ public class ProductEntity {
         ProductEntity entity = new ProductEntity();
         entity.setId(product.getId().value());
         entity.setTenantId(product.getTenantId());
+        entity.setCategoryId(product.getCategoryId());
         entity.setName(product.getName());
         entity.setDescription(product.getDescription());
         entity.setPrice(product.getPrice());
@@ -40,6 +42,7 @@ public class ProductEntity {
         return Product.restore(
                 new ProductId(id),
                 tenantId,
+                categoryId,
                 name,
                 description,
                 price,
@@ -71,6 +74,14 @@ public class ProductEntity {
 
     public void setTenantId(String tenantId) {
         this.tenantId = tenantId;
+    }
+
+    public String getCategoryId() {
+        return categoryId;
+    }
+
+    public void setCategoryId(String categoryId) {
+        this.categoryId = categoryId;
     }
 
     public String getName() {

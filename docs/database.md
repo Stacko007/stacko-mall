@@ -8,11 +8,13 @@
 
 | 表 | 职责 |
 | --- | --- |
+| `mall_product_category` | 商品多层级类目 |
 | `mall_product` | 商品 |
 | `catalog_stock` | 商品库存 |
 | `mall_order` | 订单主表 |
 | `mall_order_item` | 订单商品快照 |
 | `mall_member` | 商城展示所需的成员投影 |
+| `mall_shipping_address` | C 端用户收货地址 |
 | `mall_payment` | 支付记录 |
 | `mall_after_sales` | 售后单 |
 | `mall_idempotency` | 幂等处理记录 |
@@ -26,6 +28,12 @@
 
 ```text
 docs/database/rebuild-stacko-mall.sql
+```
+
+已有库临时升级脚本：
+
+```text
+docs/database/upgrade-2026-08-06-phase2-phase3.sql
 ```
 
 执行示例：

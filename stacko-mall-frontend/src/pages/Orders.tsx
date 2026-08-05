@@ -1,4 +1,4 @@
-import { Button, Card, List, Space, Tag, Tabs, Typography, message } from 'antd';
+import { Button, Card, List, Popconfirm, Space, Tag, Tabs, Typography, message } from 'antd';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api, Order } from '../services/api';
@@ -6,6 +6,8 @@ import { session } from '../store/session';
 import { createIdempotencyKey } from '../utils/idempotency';
 import { EmptyState, ErrorState } from '../components/State';
 import { getErrorMessage } from '../utils/error';
+import { ProductCategoryLink } from '../components/ProductCategoryLink';
+import { useProductCategoryLookup } from '../hooks/useProductCategoryLookup';
 
 const { Title } = Typography;
 const statusMap: Record<
@@ -24,6 +26,7 @@ export default function Orders() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [status, setStatus] = useState('ALL');
   const [error, setError] = useState<string | null>(null);
+  const { categoryMap, getProductCategoryId } = useProductCategoryLookup();
 
   const load = async () => {
     if (!session.getToken()) {
@@ -35,6 +38,7 @@ export default function Orders() {
       const resp = await api.listOrders();
       if (resp.data.success) {
         setOrders(resp.data.data || []);
+        setError(null);
       } else {
         const msg = resp.data.message || '订单加载失败';
         setError(msg);
@@ -80,12 +84,29 @@ export default function Orders() {
     }
   };
 
+  const handleConfirm = async (id: string) => {
+    try {
+      const resp = await api.confirmOrder(id, createIdempotencyKey(`CONFIRM:${id}`));
+      if (resp.data.success) {
+        message.success('已确认收货');
+        load();
+      } else {
+        message.error(resp.data.message || '确认收货失败');
+      }
+    } catch (error) {
+      // global handler will notify
+    }
+  };
+
   return (
     <div>
       <Title level={2}>订单</Title>
       <Tabs
         activeKey={status}
-        onChange={setStatus}
+        onChange={(nextStatus) => {
+          setStatus(nextStatus);
+          load();
+        }}
         items={[
           { key: 'ALL', label: '全部' },
           { key: 'CREATED', label: '待付款' },
@@ -132,6 +153,9 @@ export default function Orders() {
                           <div className="order-item-meta">
                             ¥ {item.price} × {item.quantity}
                           </div>
+                          <div className="order-item-meta">
+                            类目：<ProductCategoryLink categoryId={getProductCategoryId(item.productId)} categoryMap={categoryMap} />
+                          </div>
                         </div>
                         <div className="order-item-amount">¥ {item.price * item.quantity}</div>
                       </List.Item>
@@ -147,6 +171,16 @@ export default function Orders() {
                       <Button danger onClick={() => handleCancel(order.id)}>
                         取消
                       </Button>
+                    )}
+                    {order.status === 'SHIPPED' && (
+                      <Popconfirm
+                        title="确认已收到商品？"
+                        okText="确认收货"
+                        cancelText="再等等"
+                        onConfirm={() => handleConfirm(order.id)}
+                      >
+                        <Button type="primary">确认收货</Button>
+                      </Popconfirm>
                     )}
                     {order.status !== 'CREATED' && (
                       <Button onClick={() => message.info('售后功能建设中')}>

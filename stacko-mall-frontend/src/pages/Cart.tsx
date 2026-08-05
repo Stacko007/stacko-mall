@@ -1,17 +1,22 @@
-import { Button, Card, Checkbox, Empty, InputNumber, List, Space, Typography, message } from 'antd';
-import { useMemo, useState } from 'react';
+import { Button, Card, Checkbox, Empty, InputNumber, List, Select, Space, Typography, message } from 'antd';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { api } from '../services/api';
+import { api, ShippingAddress } from '../services/api';
 import { cartStore, CartItem } from '../store/cart';
 import { session } from '../store/session';
 import { createIdempotencyKey } from '../utils/idempotency';
+import { ProductCategoryLink } from '../components/ProductCategoryLink';
+import { useProductCategoryLookup } from '../hooks/useProductCategoryLookup';
 
 const { Title, Paragraph } = Typography;
 
 export default function Cart() {
   const [items, setItems] = useState<CartItem[]>(cartStore.list());
+  const [addresses, setAddresses] = useState<ShippingAddress[]>([]);
+  const [addressId, setAddressId] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
+  const { categoryMap, getProductCategoryId } = useProductCategoryLookup();
 
   const allSelected = useMemo(
     () => items.length > 0 && items.every((item) => item.selected),
@@ -30,6 +35,24 @@ export default function Cart() {
 
   const refresh = (next: CartItem[]) => setItems([...next]);
 
+  useEffect(() => {
+    if (!session.getToken()) return;
+    const loadAddresses = async () => {
+      try {
+        const resp = await api.listAddresses();
+        if (resp.data.success) {
+          const next = resp.data.data || [];
+          setAddresses(next);
+          const defaultAddress = next.find((address) => address.defaultAddress) || next[0];
+          setAddressId(defaultAddress?.id || '');
+        }
+      } catch {
+        // global handler will notify
+      }
+    };
+    loadAddresses();
+  }, []);
+
   const handleSubmit = async () => {
     if (!session.getToken()) {
       message.warning('请先登录再下单');
@@ -39,10 +62,16 @@ export default function Cart() {
       message.warning('请选择商品');
       return;
     }
+    if (!addressId) {
+      message.warning('请先选择收货地址');
+      navigate('/addresses');
+      return;
+    }
     setSubmitting(true);
     try {
       const resp = await api.createOrder(
         {
+          addressId,
           items: selectedItems.map((item) => ({
             productId: item.productId,
             productName: item.name,
@@ -104,6 +133,9 @@ export default function Cart() {
               }
             >
               <Paragraph>单价：¥ {item.price}</Paragraph>
+              <Paragraph>
+                类目：<ProductCategoryLink categoryId={item.categoryId ?? getProductCategoryId(item.productId)} categoryMap={categoryMap} />
+              </Paragraph>
               <Space>
                 数量：
                 <InputNumber
@@ -123,6 +155,27 @@ export default function Cart() {
         )}
       />
       <Card style={{ marginTop: 16 }}>
+        <Space direction="vertical" style={{ width: '100%', marginBottom: 12 }}>
+          <span>收货地址：</span>
+          <Select
+            value={addressId || undefined}
+            placeholder="请选择收货地址"
+            style={{ width: '100%' }}
+            options={addresses.map((address) => ({
+              value: address.id,
+              label: `${address.receiverName} ${address.receiverPhone} ${[
+                address.province,
+                address.city,
+                address.district,
+                address.detailAddress
+              ].filter(Boolean).join(' ')}${address.defaultAddress ? '（默认）' : ''}`
+            }))}
+            onChange={setAddressId}
+          />
+          {addresses.length === 0 ? (
+            <Button onClick={() => navigate('/addresses')}>新增收货地址</Button>
+          ) : null}
+        </Space>
         <Space>
           <Checkbox checked={allSelected} onChange={(e) => refresh(cartStore.toggleAll(e.target.checked))}>
             全选

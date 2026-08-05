@@ -51,19 +51,41 @@ export type UserSession = {
 export type Product = {
   id: string;
   tenantId?: string;
+  categoryId?: string | null;
   name: string;
   description?: string;
   price: number;
-  status?: string;
+  status?: ProductStatus;
   createdAt?: string;
   updatedAt?: string;
 };
+
+export type ProductCategory = {
+  id: string;
+  parentId?: string | null;
+  name: string;
+  sort: number;
+  status: 'ENABLED' | 'DISABLED';
+  level: number;
+  path: string;
+  children?: ProductCategory[];
+};
+
+export type ProductStatus = 'DRAFT' | 'ACTIVE' | 'INACTIVE';
 
 export type Stock = {
   productId: string;
   quantity: number;
   updatedAt?: string;
 };
+
+export type OrderStatus =
+  | 'CREATED'
+  | 'PAID'
+  | 'SHIPPED'
+  | 'COMPLETED'
+  | 'CANCELLED'
+  | 'CLOSED';
 
 export type OrderItem = {
   productId: string;
@@ -76,10 +98,16 @@ export type OrderItem = {
 export type Order = {
   id: string;
   buyerId: string;
-  status: 'CREATED' | 'PAID' | 'SHIPPED' | 'COMPLETED' | 'CANCELLED' | 'CLOSED';
+  status: OrderStatus;
   totalAmount: number;
   shippingCarrier?: string | null;
   trackingNo?: string | null;
+  receiverName?: string | null;
+  receiverPhone?: string | null;
+  receiverProvince?: string | null;
+  receiverCity?: string | null;
+  receiverDistrict?: string | null;
+  receiverAddress?: string | null;
   createdAt?: string;
   updatedAt?: string;
   shippedAt?: string | null;
@@ -89,12 +117,46 @@ export type Order = {
 
 export type OrderCreateRequest = {
   buyerId?: string;
+  addressId: string;
   items: Array<{
     productId: string;
     productName: string;
     price: number;
     quantity: number;
   }>;
+};
+
+export type ShippingAddress = {
+  id: string;
+  receiverName: string;
+  receiverPhone: string;
+  province: string;
+  city: string;
+  district?: string | null;
+  detailAddress: string;
+  defaultAddress: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export type ShippingAddressPayload = {
+  receiverName: string;
+  receiverPhone: string;
+  province: string;
+  city: string;
+  district?: string;
+  detailAddress: string;
+  defaultAddress?: boolean;
+};
+
+export type MemberProfile = {
+  id: string;
+  accountId: number;
+  membershipId: number;
+  username?: string | null;
+  nickname?: string | null;
+  phone?: string | null;
+  email?: string | null;
 };
 
 export type PaymentCallbackRequest = {
@@ -122,12 +184,36 @@ export const api = {
   currentSession: () =>
     userHttp.get<ApiResponse<UserSession>>('/users/me'),
 
-  getProducts: () => http.get<ApiResponse<Product[]>>('/c/products'),
+  currentMember: () =>
+    http.get<ApiResponse<MemberProfile>>('/c/members/me'),
+
+  getProducts: (categoryId?: string) =>
+    http.get<ApiResponse<Product[]>>('/c/products', {
+      params: categoryId ? { categoryId } : undefined
+    }),
+
+  getCategories: () =>
+    http.get<ApiResponse<ProductCategory[]>>('/c/categories'),
 
   getProduct: (id: string) => http.get<ApiResponse<Product>>(`/c/products/${id}`),
 
   getStock: (productId: string) =>
     http.get<ApiResponse<Stock>>(`/c/stocks/${productId}`),
+
+  listAddresses: () =>
+    http.get<ApiResponse<ShippingAddress[]>>('/c/addresses'),
+
+  createAddress: (payload: ShippingAddressPayload) =>
+    http.post<ApiResponse<ShippingAddress>>('/c/addresses', payload),
+
+  updateAddress: (id: string, payload: ShippingAddressPayload) =>
+    http.put<ApiResponse<ShippingAddress>>(`/c/addresses/${id}`, payload),
+
+  deleteAddress: (id: string) =>
+    http.delete<ApiResponse<void>>(`/c/addresses/${id}`),
+
+  setDefaultAddress: (id: string) =>
+    http.post<ApiResponse<ShippingAddress>>(`/c/addresses/${id}/default`),
 
   createOrder: (payload: OrderCreateRequest, idempotencyKey?: string) =>
     http.post<ApiResponse<Order>>('/c/orders', payload, {
@@ -153,6 +239,14 @@ export const api = {
       headers: {
         'X-Idempotency-Key':
           idempotencyKey || createIdempotencyKey(`CANCEL:${id}`)
+      }
+    }),
+
+  confirmOrder: (id: string, idempotencyKey?: string) =>
+    http.post<ApiResponse<Order>>(`/c/orders/${id}/confirm`, null, {
+      headers: {
+        'X-Idempotency-Key':
+          idempotencyKey || createIdempotencyKey(`CONFIRM:${id}`)
       }
     }),
 

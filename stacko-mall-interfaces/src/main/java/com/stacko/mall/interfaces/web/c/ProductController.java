@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -24,8 +25,9 @@ public class ProductController {
     }
 
     @GetMapping
-    public ApiResponse<List<ProductResponse>> list(@RequestHeader("X-Tenant-ID") String tenantId) {
-        List<ProductResponse> responses = productApplicationService.list(tenantId).stream()
+    public ApiResponse<List<ProductResponse>> list(@RequestHeader("X-Tenant-ID") String tenantId,
+                                                   @RequestParam(value = "categoryId", required = false) String categoryId) {
+        List<ProductResponse> responses = productApplicationService.listActive(tenantId, categoryId).stream()
                 .map(ProductResponse::from)
                 .toList();
         return ApiResponse.ok(responses);
@@ -34,7 +36,7 @@ public class ProductController {
     @GetMapping("/{id}")
     public ApiResponse<ProductResponse> get(@RequestHeader("X-Tenant-ID") String tenantId,
                                             @PathVariable("id") String id) {
-        Product product = productApplicationService.get(tenantId, id);
+        Product product = productApplicationService.getActive(tenantId, id);
         return ApiResponse.ok(ProductResponse.from(product));
     }
 }

@@ -10,6 +10,7 @@ import java.math.BigDecimal;
 public class ProductUpdateRequest {
     @NotBlank
     private String name;
+    private String categoryId;
     private String description;
     @NotNull
     @Positive
@@ -23,6 +24,14 @@ public class ProductUpdateRequest {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getCategoryId() {
+        return categoryId;
+    }
+
+    public void setCategoryId(String categoryId) {
+        this.categoryId = categoryId;
     }
 
     public String getDescription() {

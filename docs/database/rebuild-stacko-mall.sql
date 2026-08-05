@@ -14,17 +14,20 @@ DROP TABLE IF EXISTS mall_order_status_history;
 DROP TABLE IF EXISTS mall_idempotency;
 DROP TABLE IF EXISTS mall_after_sales;
 DROP TABLE IF EXISTS mall_payment;
+DROP TABLE IF EXISTS mall_shipping_address;
 DROP TABLE IF EXISTS mall_member;
 DROP TABLE IF EXISTS mall_order_item;
 DROP TABLE IF EXISTS mall_order;
 DROP TABLE IF EXISTS catalog_stock;
 DROP TABLE IF EXISTS mall_product;
+DROP TABLE IF EXISTS mall_product_category;
 
 SET FOREIGN_KEY_CHECKS = 1;
 
 CREATE TABLE mall_product (
   id VARCHAR(64) NOT NULL,
   tenant_id VARCHAR(64) NOT NULL,
+  category_id VARCHAR(64) NULL,
   name VARCHAR(128) NOT NULL,
   description VARCHAR(512) NULL,
   price DECIMAL(18, 2) NOT NULL,
@@ -32,7 +35,24 @@ CREATE TABLE mall_product (
   created_at DATETIME(6) NOT NULL,
   updated_at DATETIME(6) NOT NULL,
   PRIMARY KEY (id),
-  KEY idx_catalog_product_tenant (tenant_id)
+  KEY idx_catalog_product_tenant (tenant_id),
+  KEY idx_mall_product_category (tenant_id, category_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE mall_product_category (
+  id VARCHAR(64) NOT NULL,
+  tenant_id VARCHAR(64) NOT NULL,
+  parent_id VARCHAR(64) NULL,
+  name VARCHAR(128) NOT NULL,
+  sort INT NOT NULL DEFAULT 0,
+  status VARCHAR(32) NOT NULL,
+  level INT NOT NULL,
+  path VARCHAR(512) NOT NULL,
+  created_at DATETIME(6) NOT NULL,
+  updated_at DATETIME(6) NOT NULL,
+  PRIMARY KEY (id),
+  KEY idx_mall_product_category_tenant_parent (tenant_id, parent_id),
+  KEY idx_mall_product_category_tenant_status (tenant_id, status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE catalog_stock (
@@ -53,6 +73,12 @@ CREATE TABLE mall_order (
   total_amount DECIMAL(18, 2) NOT NULL,
   shipping_carrier VARCHAR(64) NULL,
   tracking_no VARCHAR(128) NULL,
+  receiver_name VARCHAR(64) NULL,
+  receiver_phone VARCHAR(32) NULL,
+  receiver_province VARCHAR(64) NULL,
+  receiver_city VARCHAR(64) NULL,
+  receiver_district VARCHAR(64) NULL,
+  receiver_address VARCHAR(256) NULL,
   created_at DATETIME(6) NOT NULL,
   updated_at DATETIME(6) NOT NULL,
   shipped_at DATETIME(6) NULL,
@@ -92,6 +118,24 @@ CREATE TABLE mall_member (
   UNIQUE KEY uk_mall_member_membership (tenant_id, membership_id),
   KEY idx_mall_member_account (account_id),
   KEY idx_mall_member_tenant_status (tenant_id, status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE mall_shipping_address (
+  id VARCHAR(64) NOT NULL,
+  tenant_id VARCHAR(64) NOT NULL,
+  buyer_id VARCHAR(64) NOT NULL,
+  receiver_name VARCHAR(64) NOT NULL,
+  receiver_phone VARCHAR(32) NOT NULL,
+  province VARCHAR(64) NOT NULL,
+  city VARCHAR(64) NOT NULL,
+  district VARCHAR(64) NULL,
+  detail_address VARCHAR(256) NOT NULL,
+  default_address TINYINT(1) NOT NULL DEFAULT 0,
+  created_at DATETIME(6) NOT NULL,
+  updated_at DATETIME(6) NOT NULL,
+  PRIMARY KEY (id),
+  KEY idx_mall_shipping_address_buyer (tenant_id, buyer_id),
+  KEY idx_mall_shipping_address_default (tenant_id, buyer_id, default_address)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE mall_payment (

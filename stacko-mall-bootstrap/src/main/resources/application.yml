@@ -38,6 +38,8 @@ stacko:
         - /api/admin/**
         - /api/c/orders/**
         - /api/c/after-sales/**
+        - /api/c/addresses/**
+        - /api/c/members/**
 
 order:
   timeout:

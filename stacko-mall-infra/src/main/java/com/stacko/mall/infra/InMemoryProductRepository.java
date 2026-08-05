@@ -38,4 +38,16 @@ public class InMemoryProductRepository implements ProductRepository {
         }
         return new ArrayList<>(tenantStore.values());
     }
+
+    @Override
+    public List<Product> listByTenantAndCategory(String tenantId, String categoryId) {
+        return listByTenant(tenantId).stream()
+                .filter(product -> categoryId.equals(product.getCategoryId()))
+                .toList();
+    }
+
+    @Override
+    public long countByCategory(String tenantId, String categoryId) {
+        return listByTenantAndCategory(tenantId, categoryId).size();
+    }
 }

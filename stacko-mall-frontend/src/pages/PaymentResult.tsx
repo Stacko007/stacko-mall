@@ -4,6 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { api, Order } from '../services/api';
 import { ErrorState } from '../components/State';
 import { getErrorMessage } from '../utils/error';
+import { orderStatusLabels } from '../utils/status';
 
 const { Paragraph } = Typography;
 
@@ -104,7 +105,7 @@ export default function PaymentResult() {
       ) : order && (
         <Card>
           <Paragraph>金额：¥ {order.totalAmount}</Paragraph>
-          <Paragraph>状态：{order.status}</Paragraph>
+          <Paragraph>状态：{orderStatusLabels[order.status] || order.status}</Paragraph>
         </Card>
       )}
     </Result>

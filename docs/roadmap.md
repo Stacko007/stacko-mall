@@ -1,5 +1,7 @@
 # 商城待完善事项
 
+业务功能完善的分阶段执行计划见 [development-plan.md](development-plan.md)。本文档保留上线前生产化事项和中长期技术演进事项。
+
 ## P0 上线前必须完成
 
 1. **数据库迁移链**：当前以 `docs/database/rebuild-stacko-mall.sql` 作为空库基线，正式上线前必须补齐 Flyway 或等价迁移链。

@@ -22,6 +22,12 @@ public class OrderEntity {
     private BigDecimal totalAmount;
     private String shippingCarrier;
     private String trackingNo;
+    private String receiverName;
+    private String receiverPhone;
+    private String receiverProvince;
+    private String receiverCity;
+    private String receiverDistrict;
+    private String receiverAddress;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private LocalDateTime shippedAt;
@@ -36,6 +42,12 @@ public class OrderEntity {
         entity.setTotalAmount(order.getTotalAmount());
         entity.setShippingCarrier(order.getShippingCarrier());
         entity.setTrackingNo(order.getTrackingNo());
+        entity.setReceiverName(order.getReceiverName());
+        entity.setReceiverPhone(order.getReceiverPhone());
+        entity.setReceiverProvince(order.getReceiverProvince());
+        entity.setReceiverCity(order.getReceiverCity());
+        entity.setReceiverDistrict(order.getReceiverDistrict());
+        entity.setReceiverAddress(order.getReceiverAddress());
         entity.setCreatedAt(toLocalDateTime(order.getCreatedAt()));
         entity.setUpdatedAt(toLocalDateTime(order.getUpdatedAt()));
         entity.setShippedAt(toLocalDateTime(order.getShippedAt()));
@@ -53,6 +65,12 @@ public class OrderEntity {
                 totalAmount,
                 shippingCarrier,
                 trackingNo,
+                receiverName,
+                receiverPhone,
+                receiverProvince,
+                receiverCity,
+                receiverDistrict,
+                receiverAddress,
                 toInstant(createdAt),
                 toInstant(updatedAt),
                 toInstant(shippedAt),
@@ -122,6 +140,54 @@ public class OrderEntity {
 
     public void setTrackingNo(String trackingNo) {
         this.trackingNo = trackingNo;
+    }
+
+    public String getReceiverName() {
+        return receiverName;
+    }
+
+    public void setReceiverName(String receiverName) {
+        this.receiverName = receiverName;
+    }
+
+    public String getReceiverPhone() {
+        return receiverPhone;
+    }
+
+    public void setReceiverPhone(String receiverPhone) {
+        this.receiverPhone = receiverPhone;
+    }
+
+    public String getReceiverProvince() {
+        return receiverProvince;
+    }
+
+    public void setReceiverProvince(String receiverProvince) {
+        this.receiverProvince = receiverProvince;
+    }
+
+    public String getReceiverCity() {
+        return receiverCity;
+    }
+
+    public void setReceiverCity(String receiverCity) {
+        this.receiverCity = receiverCity;
+    }
+
+    public String getReceiverDistrict() {
+        return receiverDistrict;
+    }
+
+    public void setReceiverDistrict(String receiverDistrict) {
+        this.receiverDistrict = receiverDistrict;
+    }
+
+    public String getReceiverAddress() {
+        return receiverAddress;
+    }
+
+    public void setReceiverAddress(String receiverAddress) {
+        this.receiverAddress = receiverAddress;
     }
 
     public LocalDateTime getCreatedAt() {

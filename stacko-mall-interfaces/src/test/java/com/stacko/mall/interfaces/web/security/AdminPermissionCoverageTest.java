@@ -13,6 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class AdminPermissionCoverageTest {
     private static final List<Class<?>> ADMIN_CONTROLLERS = List.of(
             com.stacko.mall.interfaces.web.admin.ProductController.class,
+            com.stacko.mall.interfaces.web.admin.ProductCategoryController.class,
             com.stacko.mall.interfaces.web.admin.StockController.class,
             com.stacko.mall.interfaces.web.admin.OrderController.class,
             com.stacko.mall.interfaces.web.admin.PaymentController.class,

@@ -8,11 +8,12 @@ import {
   Select,
   Table,
   Tag,
+  TreeSelect,
   Typography,
   message
 } from 'antd';
 import { useEffect, useMemo, useState } from 'react';
-import { adminApi, Product, ProductStatus } from '../services/api';
+import { adminApi, Product, ProductCategory, ProductStatus } from '../services/api';
 import { formatDateTime } from '../utils/format';
 
 const { Text } = Typography;
@@ -23,16 +24,42 @@ const statusColors: Record<ProductStatus, string> = {
   INACTIVE: 'volcano'
 };
 
+const statusLabels: Record<ProductStatus, string> = {
+  DRAFT: '草稿',
+  ACTIVE: '上架',
+  INACTIVE: '下架'
+};
+
 type ProductFormValues = {
   name: string;
+  categoryId?: string;
   description?: string;
   price: number;
   status?: ProductStatus;
 };
 
+const flattenCategories = (items: ProductCategory[]): ProductCategory[] =>
+  items.flatMap((item) => [item, ...flattenCategories(item.children || [])]);
+
+const toCategoryTreeData = (items: ProductCategory[]): Array<{
+  title: string;
+  value: string;
+  children?: Array<{ title: string; value: string }>;
+}> =>
+  items
+    .filter((category) => category.status === 'ENABLED')
+    .map((category) => ({
+      title: category.name,
+      value: category.id,
+      children: category.children && category.children.length > 0
+        ? toCategoryTreeData(category.children)
+        : undefined
+    }));
+
 export default function Products() {
   const [loading, setLoading] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<ProductCategory[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Product | null>(null);
   const [form] = Form.useForm<ProductFormValues>();
@@ -53,9 +80,27 @@ export default function Products() {
     }
   };
 
+  const fetchCategories = async () => {
+    try {
+      const resp = await adminApi.listCategories();
+      if (resp.data.success) {
+        setCategories(resp.data.data || []);
+      }
+    } catch {
+      // global handler
+    }
+  };
+
   useEffect(() => {
     fetchProducts();
+    fetchCategories();
   }, []);
+
+  const flatCategories = useMemo(() => flattenCategories(categories), [categories]);
+  const categoryNameById = useMemo(
+    () => new Map(flatCategories.map((category) => [category.id, category.name])),
+    [flatCategories]
+  );
 
   const openCreate = () => {
     setEditing(null);
@@ -67,6 +112,7 @@ export default function Products() {
     setEditing(record);
     form.setFieldsValue({
       name: record.name,
+      categoryId: record.categoryId || undefined,
       description: record.description,
       price: record.price,
       status: record.status as ProductStatus
@@ -79,6 +125,7 @@ export default function Products() {
       if (editing) {
         const payload = {
           name: values.name,
+          categoryId: values.categoryId || null,
           description: values.description,
           price: values.price,
           status: values.status
@@ -92,6 +139,7 @@ export default function Products() {
       } else {
         const payload = {
           name: values.name,
+          categoryId: values.categoryId || null,
           description: values.description,
           price: values.price
         };
@@ -132,6 +180,12 @@ export default function Products() {
         )
       },
       {
+        title: '类目',
+        dataIndex: 'categoryId',
+        width: 160,
+        render: (value: string | null | undefined) => value ? categoryNameById.get(value) || value : '-'
+      },
+      {
         title: '价格',
         dataIndex: 'price',
         width: 120,
@@ -142,7 +196,9 @@ export default function Products() {
         dataIndex: 'status',
         width: 120,
         render: (value: ProductStatus) => (
-          <Tag color={statusColors[value] || 'default'}>{value}</Tag>
+          <Tag color={statusColors[value] || 'default'}>
+            {statusLabels[value] || value}
+          </Tag>
         )
       },
       {
@@ -162,7 +218,7 @@ export default function Products() {
         )
       }
     ],
-    []
+    [categoryNameById]
   );
 
   return (
@@ -202,6 +258,16 @@ export default function Products() {
           <Form.Item name="description" label="商品描述">
             <Input.TextArea rows={3} placeholder="描述商品卖点" />
           </Form.Item>
+          <Form.Item name="categoryId" label="商品类目">
+            <TreeSelect
+              allowClear
+              placeholder="请选择类目"
+              treeData={toCategoryTreeData(categories)}
+              treeDefaultExpandAll
+              showSearch
+              treeNodeFilterProp="title"
+            />
+          </Form.Item>
           <Form.Item
             name="price"
             label="商品价格"
@@ -217,7 +283,7 @@ export default function Products() {
             >
               <Select
                 options={['DRAFT', 'ACTIVE', 'INACTIVE'].map((status) => ({
-                  label: status,
+                  label: statusLabels[status as ProductStatus],
                   value: status
                 }))}
               />

@@ -78,6 +78,8 @@ sequenceDiagram
 - `/api/admin/**`
 - `/api/c/orders/**`
 - `/api/c/after-sales/**`
+- `/api/c/addresses/**`
+- `/api/c/members/**`
 
 这些路径缺少合法签名身份时默认拒绝。管理端 Controller 的所有 public 方法必须声明 `@RequiresPermission`，`AdminPermissionCoverageTest` 用于防止新增接口漏标。
 
@@ -132,6 +134,7 @@ flowchart LR
 当前管理端权限包括：
 
 - `mall:product:create/update/read/list`
+- `mall:category:create/update/delete/read/list`
 - `mall:stock:set/adjust/read/list`
 - `mall:order:list/read/ship/close`
 - `mall:payment:read`

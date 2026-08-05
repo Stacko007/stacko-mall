@@ -40,16 +40,31 @@ export type UserSession = {
 };
 
 export type ProductStatus = 'DRAFT' | 'ACTIVE' | 'INACTIVE';
+export type ProductCategoryStatus = 'ENABLED' | 'DISABLED';
 
 export type Product = {
   id: string;
   tenantId?: string;
+  categoryId?: string | null;
   name: string;
   description?: string;
   price: number;
   status: ProductStatus;
   createdAt?: string;
   updatedAt?: string;
+};
+
+export type ProductCategory = {
+  id: string;
+  parentId?: string | null;
+  name: string;
+  sort: number;
+  status: ProductCategoryStatus;
+  level: number;
+  path: string;
+  createdAt?: string;
+  updatedAt?: string;
+  children?: ProductCategory[];
 };
 
 export type Stock = {
@@ -93,6 +108,12 @@ export type Order = {
   totalAmount: number;
   shippingCarrier?: string | null;
   trackingNo?: string | null;
+  receiverName?: string | null;
+  receiverPhone?: string | null;
+  receiverProvince?: string | null;
+  receiverCity?: string | null;
+  receiverDistrict?: string | null;
+  receiverAddress?: string | null;
   createdAt?: string;
   updatedAt?: string;
   shippedAt?: string | null;
@@ -155,10 +176,30 @@ export const adminApi = {
     userHttp.get<ApiResponse<UserSession>>('/users/me'),
 
   listProducts: () => http.get<ApiResponse<Product[]>>('/admin/products'),
+  listCategories: () =>
+    http.get<ApiResponse<ProductCategory[]>>('/admin/categories'),
+  createCategory: (payload: {
+    parentId?: string | null;
+    name: string;
+    sort?: number;
+    status?: ProductCategoryStatus;
+  }) => http.post<ApiResponse<ProductCategory>>('/admin/categories', payload),
+  updateCategory: (
+    id: string,
+    payload: {
+      parentId?: string | null;
+      name: string;
+      sort?: number;
+      status?: ProductCategoryStatus;
+    }
+  ) => http.put<ApiResponse<ProductCategory>>(`/admin/categories/${id}`, payload),
+  deleteCategory: (id: string) =>
+    http.delete<ApiResponse<void>>(`/admin/categories/${id}`),
   getProduct: (id: string) =>
     http.get<ApiResponse<Product>>(`/admin/products/${id}`),
   createProduct: (payload: {
     name: string;
+    categoryId?: string | null;
     description?: string;
     price: number;
   }) => http.post<ApiResponse<Product>>('/admin/products', payload),
@@ -166,6 +207,7 @@ export const adminApi = {
     id: string,
     payload: {
       name: string;
+      categoryId?: string | null;
       description?: string;
       price: number;
       status?: ProductStatus;

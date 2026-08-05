@@ -54,4 +54,24 @@ public class MybatisProductRepository implements ProductRepository {
                 .map(ProductEntity::toDomain)
                 .toList();
     }
+
+    @Override
+    public List<Product> listByTenantAndCategory(String tenantId, String categoryId) {
+        LambdaQueryWrapper<ProductEntity> query = new LambdaQueryWrapper<>();
+        query.eq(ProductEntity::getTenantId, tenantId)
+                .eq(ProductEntity::getCategoryId, categoryId)
+                .orderByDesc(ProductEntity::getUpdatedAt);
+        return productMapper.selectList(query)
+                .stream()
+                .map(ProductEntity::toDomain)
+                .toList();
+    }
+
+    @Override
+    public long countByCategory(String tenantId, String categoryId) {
+        LambdaQueryWrapper<ProductEntity> query = new LambdaQueryWrapper<>();
+        query.eq(ProductEntity::getTenantId, tenantId)
+                .eq(ProductEntity::getCategoryId, categoryId);
+        return productMapper.selectCount(query);
+    }
 }

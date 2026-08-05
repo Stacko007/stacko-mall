@@ -12,6 +12,7 @@ public class CreateProductCommand {
     @NotBlank
     private String name;
     private String description;
+    private String categoryId;
     @NotNull
     @Positive
     private BigDecimal price;
@@ -38,6 +39,14 @@ public class CreateProductCommand {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public String getCategoryId() {
+        return categoryId;
+    }
+
+    public void setCategoryId(String categoryId) {
+        this.categoryId = categoryId;
     }
 
     public BigDecimal getPrice() {

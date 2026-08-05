@@ -3,6 +3,8 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { api, Order } from '../services/api';
 import { createIdempotencyKey } from '../utils/idempotency';
+import { ProductCategoryLink } from '../components/ProductCategoryLink';
+import { useProductCategoryLookup } from '../hooks/useProductCategoryLookup';
 
 const { Title, Paragraph } = Typography;
 
@@ -11,6 +13,7 @@ export default function Payment() {
   const navigate = useNavigate();
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
+  const { categoryMap, getProductCategoryId } = useProductCategoryLookup();
 
   useEffect(() => {
     if (!id) return;
@@ -101,6 +104,9 @@ export default function Payment() {
                   <div className="order-item-name">{item.productName}</div>
                   <div className="order-item-meta">
                     ¥ {item.price} × {item.quantity}
+                  </div>
+                  <div className="order-item-meta">
+                    类目：<ProductCategoryLink categoryId={getProductCategoryId(item.productId)} categoryMap={categoryMap} />
                   </div>
                 </div>
                 <div className="order-item-amount">¥ {item.price * item.quantity}</div>

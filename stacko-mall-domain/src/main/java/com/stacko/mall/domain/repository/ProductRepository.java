@@ -12,4 +12,8 @@ public interface ProductRepository {
     Optional<Product> findById(String tenantId, ProductId id);
 
     List<Product> listByTenant(String tenantId);
+
+    List<Product> listByTenantAndCategory(String tenantId, String categoryId);
+
+    long countByCategory(String tenantId, String categoryId);
 }

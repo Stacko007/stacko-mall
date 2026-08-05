@@ -15,6 +15,12 @@ public class OrderResponse {
     private BigDecimal totalAmount;
     private String shippingCarrier;
     private String trackingNo;
+    private String receiverName;
+    private String receiverPhone;
+    private String receiverProvince;
+    private String receiverCity;
+    private String receiverDistrict;
+    private String receiverAddress;
     private Instant createdAt;
     private Instant updatedAt;
     private Instant shippedAt;
@@ -29,6 +35,12 @@ public class OrderResponse {
         response.setTotalAmount(order.getTotalAmount());
         response.setShippingCarrier(order.getShippingCarrier());
         response.setTrackingNo(order.getTrackingNo());
+        response.setReceiverName(order.getReceiverName());
+        response.setReceiverPhone(order.getReceiverPhone());
+        response.setReceiverProvince(order.getReceiverProvince());
+        response.setReceiverCity(order.getReceiverCity());
+        response.setReceiverDistrict(order.getReceiverDistrict());
+        response.setReceiverAddress(order.getReceiverAddress());
         response.setCreatedAt(order.getCreatedAt());
         response.setUpdatedAt(order.getUpdatedAt());
         response.setShippedAt(order.getShippedAt());
@@ -97,6 +109,54 @@ public class OrderResponse {
 
     public void setTrackingNo(String trackingNo) {
         this.trackingNo = trackingNo;
+    }
+
+    public String getReceiverName() {
+        return receiverName;
+    }
+
+    public void setReceiverName(String receiverName) {
+        this.receiverName = receiverName;
+    }
+
+    public String getReceiverPhone() {
+        return receiverPhone;
+    }
+
+    public void setReceiverPhone(String receiverPhone) {
+        this.receiverPhone = receiverPhone;
+    }
+
+    public String getReceiverProvince() {
+        return receiverProvince;
+    }
+
+    public void setReceiverProvince(String receiverProvince) {
+        this.receiverProvince = receiverProvince;
+    }
+
+    public String getReceiverCity() {
+        return receiverCity;
+    }
+
+    public void setReceiverCity(String receiverCity) {
+        this.receiverCity = receiverCity;
+    }
+
+    public String getReceiverDistrict() {
+        return receiverDistrict;
+    }
+
+    public void setReceiverDistrict(String receiverDistrict) {
+        this.receiverDistrict = receiverDistrict;
+    }
+
+    public String getReceiverAddress() {
+        return receiverAddress;
+    }
+
+    public void setReceiverAddress(String receiverAddress) {
+        this.receiverAddress = receiverAddress;
     }
 
     public Instant getCreatedAt() {

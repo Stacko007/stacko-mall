@@ -6,6 +6,7 @@ import Category from './pages/Category';
 import Cart from './pages/Cart';
 import Orders from './pages/Orders';
 import Profile from './pages/Profile';
+import Addresses from './pages/Addresses';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Search from './pages/Search';
@@ -85,6 +86,7 @@ export default function App() {
     if (pathname.startsWith('/products')) return '/products';
     if (pathname.startsWith('/cart')) return '/cart';
     if (pathname.startsWith('/orders')) return '/orders';
+    if (pathname.startsWith('/addresses')) return '/profile';
     if (pathname.startsWith('/profile')) return '/profile';
     return pathname;
   })();
@@ -139,6 +141,7 @@ export default function App() {
           <Route path="/orders" element={protectedPage(<Orders />)} />
           <Route path="/orders/:id" element={protectedPage(<OrderDetail />)} />
           <Route path="/profile" element={protectedPage(<Profile />)} />
+          <Route path="/addresses" element={protectedPage(<Addresses />)} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
         </Routes>

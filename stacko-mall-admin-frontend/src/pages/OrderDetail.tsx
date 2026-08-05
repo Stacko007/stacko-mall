@@ -164,6 +164,17 @@ export default function OrderDetail() {
                 {orderStatusLabels[order.status] || order.status}
               </Tag>
             </Descriptions.Item>
+            <Descriptions.Item label="收货人">
+              {order.receiverName ? `${order.receiverName} ${order.receiverPhone || ''}` : '-'}
+            </Descriptions.Item>
+            <Descriptions.Item label="收货地址">
+              {[
+                order.receiverProvince,
+                order.receiverCity,
+                order.receiverDistrict,
+                order.receiverAddress
+              ].filter(Boolean).join(' ') || '-'}
+            </Descriptions.Item>
             <Descriptions.Item label="订单金额">
               ¥{Number(order.totalAmount).toFixed(2)}
             </Descriptions.Item>

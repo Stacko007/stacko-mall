@@ -11,6 +11,7 @@ import {
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Dashboard from './pages/Dashboard';
 import Products from './pages/Products';
+import Categories from './pages/Categories';
 import Orders from './pages/Orders';
 import OrderDetail from './pages/OrderDetail';
 import Stocks from './pages/Stocks';
@@ -26,6 +27,7 @@ const { Text } = Typography;
 
 const navItems = [
   { key: '/admin', label: '仪表盘' },
+  { key: '/admin/categories', label: '类目管理', permission: 'mall:category:list' },
   { key: '/admin/products', label: '商品管理', permission: 'mall:product:list' },
   { key: '/admin/orders', label: '订单管理', permission: 'mall:order:list' },
   { key: '/admin/stocks', label: '库存管理', permission: 'mall:stock:list' },
@@ -105,6 +107,7 @@ export default function App() {
 
   const selectedKey = (() => {
     if (pathname === '/admin') return '/admin';
+    if (pathname.startsWith('/admin/categories')) return '/admin/categories';
     if (pathname.startsWith('/admin/products')) return '/admin/products';
     if (pathname.startsWith('/admin/orders')) return '/admin/orders';
     if (pathname.startsWith('/admin/stocks')) return '/admin/stocks';
@@ -273,6 +276,7 @@ export default function App() {
             <Routes>
               <Route path="/" element={<Navigate to="/admin" replace />} />
               <Route path="/admin" element={<Dashboard />} />
+              <Route path="/admin/categories" element={allowed('mall:category:list') ? <Categories /> : <Navigate to="/admin" replace />} />
               <Route path="/admin/products" element={allowed('mall:product:list') ? <Products /> : <Navigate to="/admin" replace />} />
               <Route path="/admin/orders" element={allowed('mall:order:list') ? <Orders /> : <Navigate to="/admin" replace />} />
               <Route path="/admin/orders/:id" element={allowed('mall:order:read') ? <OrderDetail /> : <Navigate to="/admin" replace />} />

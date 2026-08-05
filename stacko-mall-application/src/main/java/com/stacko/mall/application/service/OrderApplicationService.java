@@ -2,6 +2,7 @@ package com.stacko.mall.application.service;
 
 import com.stacko.mall.application.command.CancelOrderCommand;
 import com.stacko.mall.application.command.CloseOrderCommand;
+import com.stacko.mall.application.command.ConfirmReceiptCommand;
 import com.stacko.mall.application.command.CreateOrderCommand;
 import com.stacko.mall.application.command.OrderItemCommand;
 import com.stacko.mall.application.command.PayOrderCommand;
@@ -60,7 +61,9 @@ public class OrderApplicationService {
         List<OrderItem> items = command.getItems().stream()
                 .map(this::toItem)
                 .toList();
-        Order order = Order.create(command.getTenantId(), command.getBuyerId(), items);
+        Order order = Order.create(command.getTenantId(), command.getBuyerId(), items,
+                command.getReceiverName(), command.getReceiverPhone(), command.getReceiverProvince(),
+                command.getReceiverCity(), command.getReceiverDistrict(), command.getReceiverAddress());
         try {
             reserveStock(command.getTenantId(), items);
             Order saved = orderRepository.save(order);
@@ -186,6 +189,49 @@ public class OrderApplicationService {
             return saved;
         } catch (RuntimeException ex) {
             idempotencyService.markFailed(idempotency);
+            throw ex;
+        }
+    }
+
+    @Transactional
+    public Order confirmReceipt(ConfirmReceiptCommand command) {
+        ensureIdempotencyKey(command.getIdempotencyKey());
+        var acquire = idempotencyService.acquire(command.getTenantId(), command.getIdempotencyKey(), "ORDER_CONFIRM");
+        var idempotency = acquire.getRecord();
+        if (idempotencyService.isSuccess(idempotency)) {
+            String orderId = idempotency.getBizId();
+            if (orderId == null) {
+                throw new IllegalStateException("Idempotency record missing order id");
+            }
+            return orderRepository
+                    .findById(command.getTenantId(), new OrderId(orderId))
+                    .orElseThrow(() -> new IllegalArgumentException("Order not found"));
+        }
+        if (idempotencyService.isInProgress(idempotency) && !acquire.isNewlyCreated()) {
+            throw new IllegalStateException("Request in progress");
+        }
+        if (!acquire.isNewlyCreated()) {
+            idempotencyService.restart(idempotency);
+        }
+        Order order = orderRepository
+                .findById(command.getTenantId(), new OrderId(command.getOrderId()))
+                .orElse(null);
+        if (order == null) {
+            log.warn("Order confirm failed: order not found. tenantId={}, orderId={}", command.getTenantId(), command.getOrderId());
+            throw new IllegalArgumentException("Order not found");
+        }
+        var before = order.getStatus();
+        try {
+            order.confirm();
+            Order saved = orderRepository.save(order);
+            idempotencyService.markSuccess(idempotency, saved.getId().value());
+            log.info("Order confirmed. tenantId={}, orderId={}, status={} -> {}",
+                    command.getTenantId(), command.getOrderId(), before, saved.getStatus());
+            return saved;
+        } catch (RuntimeException ex) {
+            idempotencyService.markFailed(idempotency);
+            log.warn("Order confirm failed: invalid state. tenantId={}, orderId={}, status={}, reason={}",
+                    command.getTenantId(), command.getOrderId(), before, ex.getMessage());
             throw ex;
         }
     }

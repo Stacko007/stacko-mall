@@ -11,6 +11,7 @@ import java.math.BigDecimal;
 public class ProductCreateRequest {
     @NotBlank
     private String name;
+    private String categoryId;
     private String description;
     @NotNull
     @Positive

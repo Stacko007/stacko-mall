@@ -174,8 +174,8 @@ export default function Orders() {
         onFinish={(values) => fetchOrders(values.buyerId)}
         style={{ marginBottom: 16 }}
       >
-        <Form.Item name="buyerId" label="买家ID">
-          <Input placeholder="可选，输入买家ID过滤" />
+        <Form.Item name="buyerId" label="商城买家ID">
+          <Input placeholder="输入订单中的商城买家ID UUID，可选" />
         </Form.Item>
         <Form.Item>
           <Space>

@@ -9,6 +9,7 @@ import java.time.Instant;
 public class ProductResponse {
     private String id;
     private String tenantId;
+    private String categoryId;
     private String name;
     private String description;
     private BigDecimal price;
@@ -20,6 +21,7 @@ public class ProductResponse {
         ProductResponse response = new ProductResponse();
         response.id = product.getId().value();
         response.tenantId = product.getTenantId();
+        response.categoryId = product.getCategoryId();
         response.name = product.getName();
         response.description = product.getDescription();
         response.price = product.getPrice();
@@ -35,6 +37,10 @@ public class ProductResponse {
 
     public String getTenantId() {
         return tenantId;
+    }
+
+    public String getCategoryId() {
+        return categoryId;
     }
 
     public String getName() {

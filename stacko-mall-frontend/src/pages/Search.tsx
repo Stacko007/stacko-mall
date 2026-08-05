@@ -2,6 +2,8 @@ import { Button, Input, List, Space, Typography, message } from 'antd';
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api, Product } from '../services/api';
+import { ProductCategoryLink } from '../components/ProductCategoryLink';
+import { useProductCategories } from '../hooks/useProductCategories';
 
 const { Title } = Typography;
 const HISTORY_KEY = 'stacko_search_history';
@@ -23,6 +25,7 @@ export default function Search() {
   const [keyword, setKeyword] = useState('');
   const [products, setProducts] = useState<Product[]>([]);
   const [history, setHistory] = useState<string[]>([]);
+  const { categoryMap } = useProductCategories();
 
   useEffect(() => {
     setHistory(readHistory());
@@ -86,7 +89,14 @@ export default function Search() {
         dataSource={result}
         renderItem={(item) => (
           <List.Item>
-            {item.name} - ¥ {item.price} <Link to={`/products/${item.id}`}>详情</Link>
+            <Space wrap>
+              <span>{item.name}</span>
+              <span>¥ {item.price}</span>
+              <span>
+                类目：<ProductCategoryLink categoryId={item.categoryId} categoryMap={categoryMap} />
+              </span>
+              <Link to={`/products/${item.id}`}>详情</Link>
+            </Space>
           </List.Item>
         )}
       />

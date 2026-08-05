@@ -16,6 +16,12 @@ public class Order {
     private BigDecimal totalAmount;
     private String shippingCarrier;
     private String trackingNo;
+    private String receiverName;
+    private String receiverPhone;
+    private String receiverProvince;
+    private String receiverCity;
+    private String receiverDistrict;
+    private String receiverAddress;
     private Instant createdAt;
     private Instant updatedAt;
     private Instant shippedAt;
@@ -29,6 +35,12 @@ public class Order {
                   BigDecimal totalAmount,
                   String shippingCarrier,
                   String trackingNo,
+                  String receiverName,
+                  String receiverPhone,
+                  String receiverProvince,
+                  String receiverCity,
+                  String receiverDistrict,
+                  String receiverAddress,
                   Instant createdAt,
                   Instant updatedAt,
                   Instant shippedAt,
@@ -41,6 +53,12 @@ public class Order {
         this.totalAmount = Objects.requireNonNull(totalAmount, "totalAmount");
         this.shippingCarrier = shippingCarrier;
         this.trackingNo = trackingNo;
+        this.receiverName = receiverName;
+        this.receiverPhone = receiverPhone;
+        this.receiverProvince = receiverProvince;
+        this.receiverCity = receiverCity;
+        this.receiverDistrict = receiverDistrict;
+        this.receiverAddress = receiverAddress;
         this.createdAt = Objects.requireNonNull(createdAt, "createdAt");
         this.updatedAt = Objects.requireNonNull(updatedAt, "updatedAt");
         this.shippedAt = shippedAt;
@@ -48,11 +66,25 @@ public class Order {
     }
 
     public static Order create(String tenantId, String buyerId, List<OrderItem> items) {
+        return create(tenantId, buyerId, items, null, null, null, null, null, null);
+    }
+
+    public static Order create(String tenantId,
+                               String buyerId,
+                               List<OrderItem> items,
+                               String receiverName,
+                               String receiverPhone,
+                               String receiverProvince,
+                               String receiverCity,
+                               String receiverDistrict,
+                               String receiverAddress) {
         Instant now = Instant.now();
         BigDecimal total = items.stream()
                 .map(OrderItem::getAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-        return new Order(OrderId.newId(), tenantId, buyerId, items, OrderStatus.CREATED, total, null, null, now, now, null, null);
+        return new Order(OrderId.newId(), tenantId, buyerId, items, OrderStatus.CREATED, total, null, null,
+                receiverName, receiverPhone, receiverProvince, receiverCity, receiverDistrict, receiverAddress,
+                now, now, null, null);
     }
 
     public static Order restore(OrderId id,
@@ -63,11 +95,19 @@ public class Order {
                                 BigDecimal totalAmount,
                                 String shippingCarrier,
                                 String trackingNo,
+                                String receiverName,
+                                String receiverPhone,
+                                String receiverProvince,
+                                String receiverCity,
+                                String receiverDistrict,
+                                String receiverAddress,
                                 Instant createdAt,
                                 Instant updatedAt,
                                 Instant shippedAt,
                                 Instant completedAt) {
-        return new Order(id, tenantId, buyerId, items, status, totalAmount, shippingCarrier, trackingNo, createdAt, updatedAt, shippedAt, completedAt);
+        return new Order(id, tenantId, buyerId, items, status, totalAmount, shippingCarrier, trackingNo,
+                receiverName, receiverPhone, receiverProvince, receiverCity, receiverDistrict, receiverAddress,
+                createdAt, updatedAt, shippedAt, completedAt);
     }
 
     public void pay() {
@@ -149,6 +189,30 @@ public class Order {
 
     public String getTrackingNo() {
         return trackingNo;
+    }
+
+    public String getReceiverName() {
+        return receiverName;
+    }
+
+    public String getReceiverPhone() {
+        return receiverPhone;
+    }
+
+    public String getReceiverProvince() {
+        return receiverProvince;
+    }
+
+    public String getReceiverCity() {
+        return receiverCity;
+    }
+
+    public String getReceiverDistrict() {
+        return receiverDistrict;
+    }
+
+    public String getReceiverAddress() {
+        return receiverAddress;
     }
 
     public Instant getCreatedAt() {

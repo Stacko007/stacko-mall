@@ -3,6 +3,7 @@ import type { Product } from '../services/api';
 export type CartItem = {
   productId: string;
   name: string;
+  categoryId?: string | null;
   price: number;
   quantity: number;
   selected: boolean;
@@ -36,6 +37,7 @@ export const cartStore = {
       current.push({
         productId: product.id,
         name: product.name,
+        categoryId: product.categoryId,
         price: product.price,
         quantity,
         selected: true

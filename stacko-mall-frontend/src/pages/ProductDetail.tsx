@@ -5,6 +5,9 @@ import { api, Product, Stock } from '../services/api';
 import { cartStore } from '../store/cart';
 import { ErrorState } from '../components/State';
 import { getErrorMessage } from '../utils/error';
+import { productStatusLabels } from '../utils/status';
+import { ProductCategoryLink } from '../components/ProductCategoryLink';
+import { useProductCategories } from '../hooks/useProductCategories';
 
 const { Title, Paragraph } = Typography;
 
@@ -15,6 +18,7 @@ export default function ProductDetail() {
   const [stock, setStock] = useState<Stock | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { categoryMap } = useProductCategories();
 
   useEffect(() => {
     if (!id) return;
@@ -52,6 +56,7 @@ export default function ProductDetail() {
   if (loading) return <Skeleton active />;
   if (error) return <ErrorState description={error} />;
   if (!product) return <div>商品不存在</div>;
+  const available = product.status === 'ACTIVE';
 
   return (
     <div>
@@ -63,19 +68,26 @@ export default function ProductDetail() {
       <Card>
         <Descriptions bordered column={1}>
           <Descriptions.Item label="价格">¥ {product.price}</Descriptions.Item>
+          <Descriptions.Item label="类目">
+            <ProductCategoryLink categoryId={product.categoryId} categoryMap={categoryMap} />
+          </Descriptions.Item>
           <Descriptions.Item label="库存">
             {stock ? stock.quantity : '暂无'}
           </Descriptions.Item>
-          <Descriptions.Item label="状态">{product.status || '-'}</Descriptions.Item>
+          <Descriptions.Item label="状态">
+            {product.status ? productStatusLabels[product.status] || product.status : '-'}
+          </Descriptions.Item>
         </Descriptions>
         <Space style={{ marginTop: 16 }}>
           <Button
             type="primary"
+            disabled={!available}
             onClick={() => navigate(`/confirm?productId=${product.id}`)}
           >
             立即购买
           </Button>
           <Button
+            disabled={!available}
             onClick={() => {
               cartStore.add(product, 1);
               message.success('已加入购物车');

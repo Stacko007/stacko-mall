@@ -42,6 +42,7 @@ public class ProductController {
         CreateProductCommand command = new CreateProductCommand();
         command.setTenantId(tenantId);
         command.setName(request.getName());
+        command.setCategoryId(request.getCategoryId());
         command.setDescription(request.getDescription());
         command.setPrice(request.getPrice());
         Product product = productApplicationService.create(command);
@@ -58,6 +59,7 @@ public class ProductController {
         command.setTenantId(tenantId);
         command.setProductId(id);
         command.setName(request.getName());
+        command.setCategoryId(request.getCategoryId());
         command.setDescription(request.getDescription());
         command.setPrice(request.getPrice());
         command.setStatus(request.getStatus());

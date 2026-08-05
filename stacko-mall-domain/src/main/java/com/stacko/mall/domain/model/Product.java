@@ -9,6 +9,7 @@ import java.util.Objects;
 public class Product {
     private final ProductId id;
     private final String tenantId;
+    private String categoryId;
     private String name;
     private String description;
     private BigDecimal price;
@@ -18,6 +19,7 @@ public class Product {
 
     private Product(ProductId id,
                     String tenantId,
+                    String categoryId,
                     String name,
                     String description,
                     BigDecimal price,
@@ -26,6 +28,7 @@ public class Product {
                     Instant updatedAt) {
         this.id = Objects.requireNonNull(id, "id");
         this.tenantId = Objects.requireNonNull(tenantId, "tenantId");
+        this.categoryId = normalizeCategoryId(categoryId);
         this.name = Objects.requireNonNull(name, "name");
         this.description = description;
         this.price = Objects.requireNonNull(price, "price");
@@ -37,9 +40,29 @@ public class Product {
     public static Product create(String tenantId,
                                  String name,
                                  String description,
-                                 BigDecimal price) {
+                                 BigDecimal price,
+                                 String categoryId) {
         Instant now = Instant.now();
-        return new Product(ProductId.newId(), tenantId, name, description, price, ProductStatus.DRAFT, now, now);
+        return new Product(ProductId.newId(), tenantId, categoryId, name, description, price, ProductStatus.DRAFT, now, now);
+    }
+
+    public static Product create(String tenantId,
+                                 String name,
+                                 String description,
+                                 BigDecimal price) {
+        return create(tenantId, name, description, price, null);
+    }
+
+    public static Product restore(ProductId id,
+                                  String tenantId,
+                                  String categoryId,
+                                  String name,
+                                  String description,
+                                  BigDecimal price,
+                                  ProductStatus status,
+                                  Instant createdAt,
+                                  Instant updatedAt) {
+        return new Product(id, tenantId, categoryId, name, description, price, status, createdAt, updatedAt);
     }
 
     public static Product restore(ProductId id,
@@ -50,10 +73,11 @@ public class Product {
                                   ProductStatus status,
                                   Instant createdAt,
                                   Instant updatedAt) {
-        return new Product(id, tenantId, name, description, price, status, createdAt, updatedAt);
+        return restore(id, tenantId, null, name, description, price, status, createdAt, updatedAt);
     }
 
-    public void update(String name, String description, BigDecimal price, ProductStatus status) {
+    public void update(String name, String description, BigDecimal price, ProductStatus status, String categoryId) {
+        this.categoryId = normalizeCategoryId(categoryId);
         this.name = Objects.requireNonNull(name, "name");
         this.description = description;
         this.price = Objects.requireNonNull(price, "price");
@@ -67,6 +91,10 @@ public class Product {
 
     public String getTenantId() {
         return tenantId;
+    }
+
+    public String getCategoryId() {
+        return categoryId;
     }
 
     public String getName() {
@@ -91,5 +119,9 @@ public class Product {
 
     public Instant getUpdatedAt() {
         return updatedAt;
+    }
+
+    private static String normalizeCategoryId(String categoryId) {
+        return categoryId == null || categoryId.isBlank() ? null : categoryId.trim();
     }
 }
